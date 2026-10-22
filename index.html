@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>সালমান গণিত একাডেমি</title>
+  <style>
+:root{
+  --c-primary:#0f766e; --c-primary-d:#0b5a54; --c-bg:#f3f6f6; --c-card:#ffffff; --c-text:#1f2937;
+  --c-muted:#6b7280; --c-line:#e5e7eb; --c-ok:#15803d; --c-warn:#b45309; --c-err:#b91c1c; --c-info:#1d4ed8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Noto Sans Bengali","Nirmala UI","Kalpurush","Siyam Rupali","Hind Siliguri",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--c-bg); color:var(--c-text); font-size:16px; line-height:1.55;
+}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0 0 .5em;line-height:1.3}
+h1{font-size:1.45rem} h2{font-size:1.2rem} h3{font-size:1.05rem}
+.muted{color:var(--c-muted)}
+.err{color:var(--c-err)}
+label{display:block;font-weight:600;margin:.7em 0 .25em;font-size:.95rem}
+input,select,textarea{
+  width:100%;padding:.65em .75em;border:1px solid #cbd5d5;border-radius:8px;font:inherit;background:#fff;color:inherit;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid #5eead4;border-color:var(--c-primary)}
+textarea{min-height:70px;resize:vertical}
+
+.btn{
+  display:inline-block;border:1px solid #cbd5d5;background:#fff;color:var(--c-text);padding:.6em 1em;border-radius:8px;
+  font:inherit;font-weight:600;cursor:pointer;text-align:center;
+}
+.btn:hover{background:#f1f5f5}
+.btn.primary{background:var(--c-primary);border-color:var(--c-primary);color:#fff}
+.btn.primary:hover{background:var(--c-primary-d)}
+.btn.danger{background:#fff;border-color:var(--c-err);color:var(--c-err)}
+.btn.small{padding:.3em .7em;font-size:.88rem}
+.btn.block{display:block;width:100%;margin-top:.8em}
+.btn.link{border:none;background:none;color:var(--c-primary);font-weight:500}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* লগইন */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.login-card{background:var(--c-card);width:100%;max-width:400px;padding:28px 22px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.login-msg{min-height:1.4em;margin:.8em 0 0;color:var(--c-err);font-size:.92rem}
+.login-msg.ok{color:var(--c-ok)}
+
+/* কাঠামো */
+.topbar{background:var(--c-primary);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;gap:8px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:1.1rem}
+.who{font-size:.9rem;display:flex;align-items:center;gap:8px}
+.nav{display:flex;gap:4px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--c-line);padding:6px 10px;position:sticky;top:0;z-index:5}
+.nav button{flex:0 0 auto;border:none;background:none;padding:.55em .95em;border-radius:8px;font:inherit;font-weight:600;color:var(--c-muted);cursor:pointer;white-space:nowrap}
+.nav button.on{background:#ccfbf1;color:var(--c-primary-d)}
+.main{max-width:1100px;margin:0 auto;padding:14px}
+
+.panel{background:var(--c-card);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+.toolbar>*{flex:1 1 150px}
+.toolbar .btn{flex:0 0 auto}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row.end{justify-content:flex-end;margin-top:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+/* কার্ড */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--c-card);border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);border-left:5px solid var(--c-primary)}
+.card.warn{border-left-color:var(--c-warn)} .card.ok{border-left-color:var(--c-ok)}
+.card .t{color:var(--c-muted);font-size:.9rem}
+.card .v{font-size:1.55rem;font-weight:700;margin-top:2px}
+.card .s{color:var(--c-muted);font-size:.82rem}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.banner{background:#fef3c7;border:1px solid #f59e0b;color:#78350f;padding:10px 12px;border-radius:8px;margin-bottom:12px}
+
+/* টেবিল */
+.tablewrap{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;background:#fff}
+table.rt th,table.rt td{padding:8px 10px;border-bottom:1px solid var(--c-line);text-align:left;vertical-align:top}
+table.rt th{background:#f0f5f5;font-size:.88rem;white-space:nowrap}
+table.rt td.num,table.rt th.num{text-align:right}
+table.rt tfoot td{font-weight:700;background:#f8fafa}
+@media(max-width:640px){
+  table.rt thead{display:none}
+  table.rt,table.rt tbody,table.rt tr,table.rt td{display:block;width:100%}
+  table.rt tr{border:1px solid var(--c-line);border-radius:10px;margin-bottom:10px;padding:6px 4px;background:#fff}
+  table.rt td{border:none;display:flex;justify-content:space-between;gap:10px;padding:4px 10px;text-align:right}
+  table.rt td::before{content:attr(data-label);font-weight:600;color:var(--c-muted);text-align:left;flex:0 0 42%}
+  table.rt td[data-label=""]::before{display:none}
+  table.rt td[data-label=""]{justify-content:flex-end;flex-wrap:wrap}
+}
+
+.badge{display:inline-block;padding:.1em .6em;border-radius:99px;font-size:.82rem;font-weight:600;white-space:nowrap}
+.b-red{background:#fee2e2;color:#991b1b} .b-amber{background:#fef3c7;color:#92400e}
+.b-green{background:#dcfce7;color:#166534} .b-blue{background:#dbeafe;color:#1e40af} .b-gray{background:#e5e7eb;color:#374151}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{border:1px solid var(--c-line);background:#fff;padding:.45em .9em;border-radius:99px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--c-primary);color:#fff;border-color:var(--c-primary)}
+
+.kv{display:grid;grid-template-columns:140px 1fr;gap:4px 10px;margin-bottom:10px}
+.kv dt{color:var(--c-muted)} .kv dd{margin:0;font-weight:600;word-break:break-word}
+.sug{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.sug button{text-align:left}
+
+/* ডায়ালগ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:16px;overflow:auto;z-index:20}
+.overlay.open{display:flex}
+.overlay.top{z-index:40;align-items:center}
+.dialog{background:#fff;border-radius:14px;padding:18px;width:100%;max-width:640px;position:relative;margin:auto}
+.dialog.small{max-width:420px}
+.overlay.wide .dialog{max-width:900px}
+.dialog .x{position:absolute;right:10px;top:8px;border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--c-muted)}
+.confirm-msg{white-space:pre-line;font-size:1.02rem}
+
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;z-index:60}
+.spinner{width:42px;height:42px;border:5px solid #99f6e4;border-top-color:var(--c-primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:10px;max-width:92vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:70}
+.toast.show{opacity:1} .toast.err{background:var(--c-err)} .toast.ok{background:var(--c-ok)}
+
+/* রশিদ (স্ক্রিন প্রিভিউ ও প্রিন্ট — ৮০ মিমি থার্মাল) */
+.receipt-preview{background:#e5e7eb;padding:12px;border-radius:10px;display:flex;justify-content:center;overflow-x:auto}
+.receipt{
+  width:72mm;background:#fff;color:#000;padding:3mm 2mm;font-size:12.5px;line-height:1.45;
+  font-family:"Noto Sans Bengali","Nirmala UI","Kalpurush","Siyam Rupali",sans-serif;
+}
+.receipt .r-head{text-align:center}
+.receipt .r-name{font-size:16px;font-weight:700}
+.receipt .r-title{text-align:center;font-weight:700;margin:4px 0}
+.receipt .r-copy{text-align:center;font-weight:700;border:1px solid #000;margin:4px 0;padding:1px 0}
+.receipt .r-line{border:0;border-top:1px dashed #000;margin:5px 0}
+.receipt .r-row{display:flex;justify-content:space-between;gap:6px}
+.receipt .r-row span{flex:0 0 auto;max-width:52%}
+.receipt .r-row b{text-align:right;overflow-wrap:anywhere;font-weight:600}
+.receipt .r-big b{font-size:14px}
+.receipt .r-foot{text-align:center;margin-top:6px;overflow-wrap:anywhere}
+
+/* প্রিন্ট */
+#printArea{display:none}
+.report-print h2{margin:0 0 2px}
+.report-print table{width:100%;border-collapse:collapse;font-size:12px}
+.report-print th,.report-print td{border:1px solid #444;padding:3px 5px;text-align:left}
+.report-print th{background:#eee}
+@media print{
+  body.is-printing > *:not(#printArea):not(#pageStyle){display:none!important}
+  body.is-printing{background:#fff}
+  body.is-printing #printArea{display:block}
+  #printArea.receipt-mode .receipt{margin:0 auto;box-shadow:none}
+  #printArea.receipt-mode{width:80mm}
+  #printArea.report-mode{color:#000;font-size:12px}
+  .receipt{-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid}
+}
+</style>
+
+</head>
+<body>
+
+  <!-- লগইন -->
+  <div id="loginScreen" class="login-wrap">
+    <div class="login-card">
+      <h1>সালমান গণিত একাডেমি</h1>
+      <p class="muted">শুধু অনুমোদিত ইউজার প্রবেশ করতে পারবেন।</p>
+
+      <div id="loginStep1">
+        <label for="loginEmail">আপনার ইমেইল</label>
+        <input type="email" id="loginEmail" autocomplete="email" placeholder="example@gmail.com">
+        <button class="btn primary block" data-act="send-otp">লগইন কোড পাঠান</button>
+      </div>
+
+      <div id="loginStep2" hidden>
+        <p class="muted">ইমেইলে পাঠানো ৬ সংখ্যার কোড লিখুন।</p>
+        <label for="loginCode">লগইন কোড</label>
+        <input type="text" id="loginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="______">
+        <button class="btn primary block" data-act="verify-otp">প্রবেশ করুন</button>
+        <button class="btn link block" data-act="login-back">ইমেইল পরিবর্তন / নতুন কোড</button>
+      </div>
+      <p id="loginMsg" class="login-msg" role="alert"></p>
+    </div>
+  </div>
+
+  <!-- মূল অ্যাপ -->
+  <div id="appScreen" hidden>
+    <header class="topbar">
+      <div class="brand" id="brandName">সালমান গণিত একাডেমি</div>
+      <div class="who"><span id="whoName"></span> <button class="btn small" data-act="logout">লগআউট</button></div>
+    </header>
+    <nav class="nav" id="nav"></nav>
+    <main id="main" class="main"></main>
+  </div>
+
+  <!-- ডায়ালগ -->
+  <div id="modal" class="overlay">
+    <div class="dialog">
+      <button class="x" data-act="close-modal" aria-label="বন্ধ করুন">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="confirm" class="overlay top">
+    <div class="dialog small">
+      <div id="confirmMsg" class="confirm-msg"></div>
+      <div class="row end">
+        <button id="confirmNo" class="btn">না, ফিরে যান</button>
+        <button id="confirmOk" class="btn primary">হ্যাঁ, নিশ্চিত</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="busy" class="busy" hidden><div class="spinner"></div></div>
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- প্রিন্ট এলাকা (প্রিন্টের সময় শুধু এটিই দেখা যায়) -->
+  <div id="printArea"></div>
+  <style id="pageStyle"></style>
+
+  <script src="config.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ================= অবস্থা ================= */
+var S = {
+  token: null, user: null, cfg: null, view: 'dashboard', adminTab: 'users', reportTab: 'daily',
+  dashMonth: null, pay: { student: null, month: null, info: null }, pending: null, sug: {}, rep: null,
+  loginEmail: ''
+};
+var NAV = [
+  { id: 'dashboard', label: 'ড্যাশবোর্ড', roles: ['Admin', 'Staff'] },
+  { id: 'students', label: 'শিক্ষার্থী', roles: ['Admin', 'Staff'] },
+  { id: 'payment', label: 'বেতন জমা', roles: ['Admin', 'Staff'] },
+  { id: 'dues', label: 'বকেয়া তালিকা', roles: ['Admin', 'Staff'] },
+  { id: 'reports', label: 'রিপোর্ট ও রশিদ', roles: ['Admin', 'Staff'] },
+  { id: 'admin', label: 'অ্যাডমিন', roles: ['Admin'] }
+];
+var MONTHS_BN = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+var BN = '০১২৩৪৫৬৭৮৯';
+
+/* ================= সাহায্যকারী ================= */
+function $(id) { return document.getElementById(id); }
+function bn(v) { return String(v).replace(/\d/g, function (d) { return BN.charAt(Number(d)); }); }
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function taka(n) {
+  n = Number(n) || 0;
+  var s = Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return (n < 0 ? '-' : '') + '৳ ' + bn(s);
+}
+function monthLabel(ym) {
+  var m = /^(\d{4})-(\d{2})$/.exec(ym || '');
+  return m ? MONTHS_BN[Number(m[2]) - 1] + ' ' + bn(m[1]) : (ym || '');
+}
+function dmy(d) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || '');
+  return m ? bn(m[3] + '/' + m[2] + '/' + m[1]) : (d || '');
+}
+function dt(s) {
+  var m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/.exec(s || '');
+  return m ? dmy(m[1]) + ' ' + bn(m[2]) : dmy(s);
+}
+function uuid() {
+  try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* ignore */ }
+  var a = new Uint8Array(16), h = '';
+  try { crypto.getRandomValues(a); } catch (e) { for (var i = 0; i < 16; i++) a[i] = Math.floor(Math.random() * 256); }
+  for (var j = 0; j < 16; j++) h += ('0' + a[j].toString(16)).slice(-2);
+  return h;
+}
+function debounce(fn, ms) {
+  var t = null;
+  return function () { var a = arguments, c = this; clearTimeout(t); t = setTimeout(function () { fn.apply(c, a); }, ms); };
+}
+function badge(st) {
+  var cls = { 'বকেয়া': 'b-red', 'আংশিক পরিশোধিত': 'b-amber', 'পরিশোধিত': 'b-green', 'অতিরিক্ত জমা': 'b-blue', 'সক্রিয়': 'b-green', 'নিষ্ক্রিয়': 'b-gray', 'বৈধ': 'b-green', 'বাতিল': 'b-red' }[st] || 'b-gray';
+  return '<span class="badge ' + cls + '">' + esc(st) + '</span>';
+}
+function tbl(head, rows, numCols) {
+  if (!rows.length) return '<p class="muted">কোনো তথ্য পাওয়া যায়নি।</p>';
+  numCols = numCols || [];
+  var h = '<div class="tablewrap"><table class="rt"><thead><tr>';
+  head.forEach(function (x, i) { h += '<th class="' + (numCols.indexOf(i) >= 0 ? 'num' : '') + '">' + esc(x) + '</th>'; });
+  h += '</tr></thead><tbody>';
+  rows.forEach(function (r) {
+    h += '<tr>';
+    r.forEach(function (c, i) { h += '<td class="' + (numCols.indexOf(i) >= 0 ? 'num' : '') + '" data-label="' + esc(head[i] || '') + '">' + c + '</td>'; });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+var busyCount = 0;
+function busy(d) { busyCount = Math.max(0, busyCount + d); $('busy').hidden = busyCount === 0; }
+var toastTimer = null;
+function toast(msg, type) {
+  var el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.className = 'toast'; }, type === 'err' ? 6000 : 3000);
+}
+function showErr(e) {
+  if (e && e.error) toast(e.error, 'err');
+  else { toast('কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।', 'err'); if (window.console) console.error(e); }
+}
+function openModal(html, wide) {
+  $('modalBody').innerHTML = html;
+  $('modal').classList.add('open');
+  $('modal').classList.toggle('wide', !!wide);
+}
+function closeModal() { $('modal').classList.remove('open'); $('modalBody').innerHTML = ''; }
+function confirmBox(msg, okText) {
+  return new Promise(function (resolve) {
+    $('confirmMsg').textContent = msg;
+    $('confirmOk').textContent = okText || 'হ্যাঁ, নিশ্চিত';
+    $('confirm').classList.add('open');
+    function done(v) {
+      $('confirm').classList.remove('open');
+      $('confirmOk').onclick = null; $('confirmNo').onclick = null;
+      resolve(v);
+    }
+    $('confirmOk').onclick = function () { done(true); };
+    $('confirmNo').onclick = function () { done(false); };
+  });
+}
+
+/* ================= সার্ভারের সাথে যোগাযোগ ================= */
+function gs(name) {
+  var args = Array.prototype.slice.call(arguments, 1), quiet = false;
+  if (args.length && args[args.length - 1] === '__quiet') { quiet = true; args.pop(); }
+  var netErr = { ok: false, network: true, error: 'সার্ভারের সাথে যোগাযোগ হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।' };
+  return new Promise(function (resolve, reject) {
+    if (!quiet) busy(1);
+    function onOk(res) {
+      if (!quiet) busy(-1);
+      if (res && res.ok === false) {
+        if (res.code === 'AUTH' && S.token) sessionLost(res.error);
+        reject(res);
+      } else resolve(res && res.data !== undefined ? res.data : res);
+    }
+    function onFail() { if (!quiet) busy(-1); reject(netErr); }
+    if (window.API_URL) {
+      // GitHub Pages মোড: Apps Script Web App-কে JSON অনুরোধ (text/plain দিলে CORS preflight লাগে না)
+      fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: name, args: args }) })
+        .then(function (r) { return r.json(); }).then(onOk, onFail);
+    } else {
+      var r = google.script.run.withSuccessHandler(onOk).withFailureHandler(onFail);
+      r[name].apply(r, args);
+    }
+  });
+}
+function call(action, payload, quiet) {
+  var a = ['api', S.token, action, payload || {}];
+  if (quiet) a.push('__quiet');
+  return gs.apply(null, a);
+}
+
+/* ================= লগইন ================= */
+function loginMsg(msg, ok) { var el = $('loginMsg'); el.textContent = msg || ''; el.className = 'login-msg' + (ok ? ' ok' : ''); }
+
+async function sendOtp() {
+  var email = $('loginEmail').value.trim();
+  if (!email) { loginMsg('ইমেইল লিখুন।'); return; }
+  try {
+    var r = await gs('requestOtp', email);
+    S.loginEmail = email;
+    $('loginStep1').hidden = true; $('loginStep2').hidden = false;
+    loginMsg(r.message, true);
+    $('loginCode').focus();
+  } catch (e) { loginMsg(e.error || 'ত্রুটি হয়েছে।'); }
+}
+async function verifyOtp() {
+  var code = $('loginCode').value.trim();
+  if (!code) { loginMsg('কোড লিখুন।'); return; }
+  try {
+    var r = await gs('verifyOtp', S.loginEmail, code);
+    S.token = r.token; S.user = r.user;
+    try { sessionStorage.setItem('ccm_token', S.token); } catch (e) { /* ignore */ }
+    $('loginCode').value = '';
+    loginMsg('');
+    await startApp();
+  } catch (e) { loginMsg(e.error || 'ত্রুটি হয়েছে।'); }
+}
+function sessionLost(msg) {
+  S.token = null; S.user = null;
+  try { sessionStorage.removeItem('ccm_token'); } catch (e) { /* ignore */ }
+  $('appScreen').hidden = true; $('loginScreen').hidden = false;
+  $('loginStep1').hidden = false; $('loginStep2').hidden = true;
+  closeModal();
+  loginMsg(msg || 'আবার লগইন করুন।');
+}
+async function doLogout() {
+  var t = S.token;
+  try { await gs('logout', t); } catch (e) { /* ignore */ }
+  sessionLost('লগআউট হয়েছে।');
+  $('loginMsg').className = 'login-msg ok';
+}
+
+/* ================= অ্যাপ শুরু ================= */
+async function startApp() {
+  var b = await call('bootstrap', {});
+  S.user = b.user; S.cfg = b;
+  S.dashMonth = b.currentMonth;
+  S.pay = { student: null, month: b.currentMonth, info: null };
+  $('loginScreen').hidden = true; $('appScreen').hidden = false;
+  $('brandName').textContent = b.settings.centerName;
+  document.title = b.settings.centerName;
+  $('whoName').textContent = S.user.name + ' (' + S.user.role + ')';
+  var nav = $('nav'), h = '';
+  NAV.forEach(function (n) {
+    if (n.roles.indexOf(S.user.role) >= 0) h += '<button data-act="nav" data-view="' + n.id + '">' + esc(n.label) + '</button>';
+  });
+  nav.innerHTML = h;
+  await show('dashboard');
+}
+
+async function show(view) {
+  S.view = view;
+  var btns = $('nav').querySelectorAll('button');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-view') === view);
+  $('main').innerHTML = '<p class="muted">লোড হচ্ছে…</p>';
+  try { await VIEWS[view](); }
+  catch (e) { showErr(e); $('main').innerHTML = '<p class="err">তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>'; }
+  window.scrollTo(0, 0);
+}
+
+/* ================= ড্যাশবোর্ড ================= */
+function card(t, v, s, cls) {
+  return '<div class="card ' + (cls || '') + '"><div class="t">' + esc(t) + '</div><div class="v">' + v + '</div><div class="s">' + esc(s || '') + '</div></div>';
+}
+
+async function viewDashboard() {
+  var month = S.dashMonth || S.cfg.currentMonth;
+  var d = await call('dashboard', { month: month });
+  var isAdmin = S.user.role === 'Admin', h = '';
+  h += '<div class="toolbar"><div><label for="dashMonth">মাস নির্বাচন</label><input type="month" id="dashMonth" value="' + esc(month) + '" placeholder="YYYY-MM"></div></div>';
+  if (d.overpaidCount > 0) h += '<div class="banner">⚠ ' + bn(d.overpaidCount) + 'টি বেতন রেকর্ডে পাওনার চেয়ে বেশি টাকা জমা আছে। অনুগ্রহ করে যাচাই করুন।</div>';
+  h += '<div class="cards">' +
+    card('সক্রিয় শিক্ষার্থী', bn(d.activeStudents) + ' জন', '') +
+    card(monthLabel(month) + ' মাসের বেতন আদায়', taka(d.monthCollected), 'মোট পাওনা ' + taka(d.monthDue), 'ok') +
+    card('মোট বকেয়া বেতন', taka(d.totalArrears), 'সব মাস মিলিয়ে', 'warn') +
+    card('বকেয়া আছে এমন শিক্ষার্থী', bn(d.arrearsStudents) + ' জন', '', 'warn') + '</div>';
+  h += '<div class="actions">' +
+    (isAdmin ? '<button class="btn primary" data-act="new-student">+ নতুন শিক্ষার্থী</button>' : '') +
+    '<button class="btn primary" data-act="nav" data-view="payment">বেতন জমা নিন</button>' +
+    '<button class="btn" data-act="nav" data-view="dues">বকেয়া তালিকা</button>' +
+    '<button class="btn" data-act="nav" data-view="reports">রশিদ প্রিন্ট / রিপোর্ট</button>' +
+    (isAdmin ? '<button class="btn" data-act="gen-month" data-month="' + esc(month) + '">এই মাসের বেতন-রেকর্ড তৈরি</button>' : '') + '</div>';
+  h += '<div class="panel"><h3>মাসভিত্তিক আদায়ের সংক্ষিপ্ত হিসাব (সর্বশেষ ৬ মাস)</h3>';
+  h += tbl(['মাস', 'মোট পাওনা', 'আদায়', 'বকেয়া'], d.history.map(function (r) {
+    return [esc(monthLabel(r.month)), taka(r.due), taka(r.paid), taka(r.outstanding)];
+  }), [1, 2, 3]) + '</div>';
+  $('main').innerHTML = h;
+  $('dashMonth').addEventListener('change', function () {
+    var v = this.value;
+    if (/^\d{4}-\d{2}$/.test(v)) { S.dashMonth = v; show('dashboard'); }
+  });
+}
+
+/* ================= শিক্ষার্থী ================= */
+async function viewStudents() {
+  var isAdmin = S.user.role === 'Admin';
+  var h = '<div class="panel"><div class="toolbar">' +
+    '<div><label for="stuQ">খুঁজুন (নাম / আইডি / শ্রেণি / মোবাইল)</label><input id="stuQ" placeholder="খুঁজুন…"></div>' +
+    '<div><label for="stuCls">শ্রেণি/ব্যাচ</label><select id="stuCls"><option value="">সব</option></select></div>' +
+    '<div><label for="stuSt">অবস্থা</label><select id="stuSt"><option value="">সব</option><option>সক্রিয়</option><option>নিষ্ক্রিয়</option></select></div>' +
+    (isAdmin ? '<button class="btn primary" data-act="new-student">+ নতুন শিক্ষার্থী</button>' : '') +
+    '</div><div id="stuResult"></div></div>';
+  $('main').innerHTML = h;
+  var run = debounce(function () { loadStudents(); }, 300);
+  $('stuQ').addEventListener('input', run);
+  $('stuCls').addEventListener('change', function () { loadStudents(); });
+  $('stuSt').addEventListener('change', function () { loadStudents(); });
+  await loadStudents(true);
+}
+
+async function loadStudents(first) {
+  var q = $('stuQ'), cls = $('stuCls'), st = $('stuSt');
+  if (!q) return;
+  var r = await call('listStudents', { q: q.value, cls: cls.value, status: st.value }, !first);
+  S.cfg.classes = r.classes;
+  var cur = cls.value, o = '<option value="">সব</option>';
+  r.classes.forEach(function (c) { o += '<option' + (c === cur ? ' selected' : '') + ' value="' + esc(c) + '">' + esc(c) + '</option>'; });
+  cls.innerHTML = o;
+  var rows = r.students.map(function (s) {
+    return [esc(s.id), esc(s.name), esc(s.cls), esc(s.guardian), esc(bn(s.mobile)), taka(s.fee), badge(s.status),
+      '<button class="btn small" data-act="view-student" data-id="' + esc(s.id) + '">বিস্তারিত</button>'];
+  });
+  $('stuResult').innerHTML = '<p class="muted">মোট ' + bn(r.students.length) + ' জন</p>' +
+    tbl(['আইডি', 'নাম', 'শ্রেণি/ব্যাচ', 'অভিভাবক', 'মোবাইল', 'মাসিক বেতন', 'অবস্থা', ''], rows, [5]);
+}
+
+async function viewStudent(id) {
+  var r = await call('getStudent', { id: id });
+  var s = r.student, isAdmin = S.user.role === 'Admin', h = '';
+  h += '<h2>' + esc(s.name) + ' ' + badge(s.status) + '</h2><dl class="kv">' +
+    '<dt>আইডি</dt><dd>' + esc(s.id) + '</dd><dt>শ্রেণি/ব্যাচ</dt><dd>' + esc(s.cls) + '</dd>' +
+    '<dt>অভিভাবক</dt><dd>' + esc(s.guardian) + '</dd><dt>মোবাইল</dt><dd>' + esc(bn(s.mobile)) + '</dd>' +
+    '<dt>ভর্তির তারিখ</dt><dd>' + dmy(s.admission) + '</dd><dt>মাসিক বেতন</dt><dd>' + taka(s.fee) + '</dd>' +
+    '<dt>মন্তব্য</dt><dd>' + esc(s.note || '—') + '</dd></dl>';
+  h += '<div class="row">' +
+    '<button class="btn primary" data-act="pay-for" data-id="' + esc(s.id) + '">বেতন জমা নিন</button>' +
+    (isAdmin ? '<button class="btn" data-act="edit-student" data-id="' + esc(s.id) + '">সম্পাদনা</button>' +
+      '<button class="btn danger" data-act="toggle-student" data-id="' + esc(s.id) + '" data-status="' + (s.status === 'সক্রিয়' ? 'নিষ্ক্রিয়' : 'সক্রিয়') + '">' + (s.status === 'সক্রিয়' ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন') + '</button>' : '') +
+    '</div>';
+  h += '<h3 style="margin-top:16px">মাসভিত্তিক বেতন</h3>';
+  h += tbl(['মাস', 'মোট পাওনা', 'জমা', 'বকেয়া', 'অবস্থা', ''], r.fees.map(function (f) {
+    var acts = '';
+    if (f.due > 0) acts += '<button class="btn small" data-act="pay-for" data-id="' + esc(s.id) + '" data-month="' + esc(f.month) + '">জমা</button> ';
+    if (isAdmin) acts += '<button class="btn small" data-act="adjust-fee" data-id="' + esc(s.id) + '" data-month="' + esc(f.month) + '" data-extra="' + f.extra + '" data-disc="' + f.discount + '" data-base="' + f.base + '" data-note="' + esc(f.note) + '">সমন্বয়</button>';
+    return [esc(monthLabel(f.month)), taka(f.total), taka(f.paid), taka(f.due), badge(f.status), acts];
+  }), [1, 2, 3]);
+  h += '<h3 style="margin-top:16px">বেতন জমার ইতিহাস</h3>';
+  h += tbl(['রশিদ', 'তারিখ', 'মাস', 'পরিমাণ', 'মাধ্যম', 'অবস্থা', ''], r.payments.map(function (p) {
+    return [esc(p.receipt), dt(p.time), esc(monthLabel(p.month)), taka(p.amount), esc(p.method), badge(p.status),
+      '<button class="btn small" data-act="receipt" data-no="' + esc(p.receipt) + '">রশিদ</button>'];
+  }), [3]);
+  openModal(h, true);
+}
+
+function studentForm(s) {
+  s = s || {};
+  var today = new Date(), iso = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
+  var cls = (S.cfg.classes || []).map(function (c) { return '<option value="' + esc(c) + '">'; }).join('');
+  openModal(
+    '<h2>' + (s.id ? 'শিক্ষার্থীর তথ্য সম্পাদনা' : 'নতুন শিক্ষার্থী') + '</h2>' +
+    '<input type="hidden" id="sfId" value="' + esc(s.id || '') + '">' +
+    '<div class="grid2"><div><label>শিক্ষার্থীর নাম *</label><input id="sfName" maxlength="100" value="' + esc(s.name || '') + '"></div>' +
+    '<div><label>শ্রেণি/ব্যাচ *</label><input id="sfCls" list="sfClsList" maxlength="50" value="' + esc(s.cls || '') + '"><datalist id="sfClsList">' + cls + '</datalist></div>' +
+    '<div><label>অভিভাবকের নাম *</label><input id="sfGuardian" maxlength="100" value="' + esc(s.guardian || '') + '"></div>' +
+    '<div><label>মোবাইল নম্বর *</label><input id="sfMobile" inputmode="tel" placeholder="01712345678" value="' + esc(s.mobile || '') + '"></div>' +
+    '<div><label>ভর্তির তারিখ *</label><input type="date" id="sfAdmit" value="' + esc(s.admission || iso) + '"></div>' +
+    '<div><label>মাসিক বেতন (৳) *</label><input id="sfFee" inputmode="decimal" value="' + esc(s.fee === undefined ? '' : s.fee) + '"></div></div>' +
+    '<label>অতিরিক্ত মন্তব্য</label><textarea id="sfNote" maxlength="300">' + esc(s.note || '') + '</textarea>' +
+    (s.id ? '<p class="muted">মাসিক বেতন বদলালে শুধু ভবিষ্যতের মাসের রেকর্ডে নতুন বেতন প্রযোজ্য হবে; আগের মাসের হিসাব বদলাবে না।</p>' : '') +
+    '<div class="row end"><button class="btn" data-act="close-modal">বাতিল</button><button class="btn primary" data-act="save-student">সংরক্ষণ করুন</button></div>');
+}
+
+async function saveStudent(confirmDuplicate) {
+  var p = {
+    id: $('sfId').value, name: $('sfName').value, cls: $('sfCls').value, guardian: $('sfGuardian').value,
+    mobile: $('sfMobile').value, admissionDate: $('sfAdmit').value, monthlyFee: $('sfFee').value, note: $('sfNote').value,
+    confirmDuplicate: !!confirmDuplicate
+  };
+  var r = await call('saveStudent', p);
+  if (r.needConfirm) {
+    if (await confirmBox(r.message, 'হ্যাঁ, যোগ করুন')) return saveStudent(true);
+    return;
+  }
+  closeModal();
+  toast('শিক্ষার্থীর তথ্য সংরক্ষিত হয়েছে (আইডি: ' + r.id + ')', 'ok');
+  if (S.view === 'students') loadStudents(); else if (S.view === 'dashboard') show('dashboard');
+}
+
+/* ================= বেতন জমা ================= */
+async function viewPayment() {
+  var h = '<div class="panel"><h3>১. শিক্ষার্থী খুঁজে নির্বাচন করুন</h3>' +
+    '<input id="payQ" placeholder="নাম / আইডি / মোবাইল লিখুন…" autocomplete="off"><div id="paySug" class="sug"></div><div id="paySel"></div></div>' +
+    '<div class="panel" id="payBox"><p class="muted">আগে শিক্ষার্থী নির্বাচন করুন।</p></div>';
+  $('main').innerHTML = h;
+  $('payQ').addEventListener('input', debounce(searchPayStudent, 300));
+  if (S.pay.student) { renderPaySel(); await loadPayInfo(); }
+}
+
+async function searchPayStudent() {
+  var q = $('payQ').value.trim();
+  if (q.length < 2) { $('paySug').innerHTML = ''; return; }
+  var r = await call('listStudents', { q: q, limit: 8 }, true);
+  S.sug = {};
+  r.students.forEach(function (s) { S.sug[s.id] = s; });
+  $('paySug').innerHTML = r.students.length ? r.students.map(function (s) {
+    return '<button class="btn" data-act="pick-student" data-id="' + esc(s.id) + '">' + esc(s.name) + ' — ' + esc(s.id) + ' — ' + esc(s.cls) + (s.status !== 'সক্রিয়' ? ' (নিষ্ক্রিয়)' : '') + '</button>';
+  }).join('') : '<p class="muted">কাউকে পাওয়া যায়নি।</p>';
+}
+
+function renderPaySel() {
+  var s = S.pay.student;
+  $('paySel').innerHTML = s ? '<div class="banner" style="background:#ecfdf5;border-color:#10b981;color:#064e3b;margin-top:10px"><b>' + esc(s.name) + '</b> (' + esc(s.id) + ') — ' + esc(s.cls) + ' — অভিভাবক: ' + esc(s.guardian) + '</div>' : '';
+}
+
+async function pickStudent(id) {
+  S.pay.student = S.sug[id];
+  S.pay.info = null; S.pending = null;
+  $('paySug').innerHTML = ''; $('payQ').value = '';
+  renderPaySel();
+  await loadPayInfo();
+}
+
+async function loadPayInfo() {
+  var s = S.pay.student, box = $('payBox');
+  if (!s) return;
+  var month = S.pay.month || S.cfg.currentMonth;
+  box.innerHTML = '<h3>২. বেতনের মাস</h3><input type="month" id="payMonth" value="' + esc(month) + '" placeholder="YYYY-MM"><div id="payInfo"></div>';
+  $('payMonth').addEventListener('change', function () {
+    if (/^\d{4}-\d{2}$/.test(this.value)) { S.pay.month = this.value; S.pending = null; loadPayInfo(); }
+  });
+  try {
+    var info = await call('paymentInfo', { studentId: s.id, month: month });
+    S.pay.info = info;
+    renderPayForm(info);
+  } catch (e) { showErr(e); $('payInfo').innerHTML = '<p class="err">' + esc(e.error || 'তথ্য লোড করা যায়নি।') + '</p>'; }
+}
+
+function renderPayForm(info) {
+  var f = info.fee, methods = S.cfg.settings.methods;
+  var h = '<h3 style="margin-top:14px">৩. হিসাব</h3><dl class="kv">' +
+    '<dt>মাসিক বেতন</dt><dd>' + taka(f.base) + '</dd>' +
+    '<dt>অতিরিক্ত চার্জ</dt><dd>' + taka(f.extra) + '</dd><dt>ছাড়</dt><dd>' + taka(f.discount) + '</dd>' +
+    '<dt>মোট পাওনা</dt><dd>' + taka(f.total) + '</dd><dt>আগের জমা</dt><dd>' + taka(f.paid) + '</dd>' +
+    '<dt>বকেয়া</dt><dd>' + taka(Math.max(f.due, 0)) + ' ' + badge(f.status) + '</dd></dl>';
+  if (info.payments.length) {
+    h += '<p class="muted">এই মাসের আগের জমা:</p>' + tbl(['রশিদ', 'তারিখ', 'পরিমাণ', 'অবস্থা', ''], info.payments.map(function (p) {
+      return [esc(p.receipt), dt(p.time), taka(p.amount), badge(p.status), '<button class="btn small" data-act="receipt" data-no="' + esc(p.receipt) + '">রশিদ</button>'];
+    }), [2]);
+  }
+  h += '<h3 style="margin-top:14px">৪. এখন কত টাকা জমা নিচ্ছেন</h3>' +
+    '<div class="grid2"><div><label>জমার পরিমাণ (৳)</label><input id="payAmt" inputmode="decimal" placeholder="যেমন: 1500"></div>' +
+    '<div><label>পেমেন্টের মাধ্যম</label><select id="payMethod">' + methods.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="row" style="margin:6px 0"><button class="btn small" data-act="fill-due" data-due="' + Math.max(f.due, 0) + '">পুরো বকেয়া বসান</button></div>' +
+    '<label>মন্তব্য (ঐচ্ছিক)</label><input id="payNote" maxlength="300">' +
+    '<button class="btn primary block" id="paySubmit" data-act="submit-pay">৫. যাচাই করে জমা নিন</button>' +
+    '<p id="payRetry" class="muted"></p>';
+  $('payInfo').innerHTML = h;
+}
+
+async function submitPay(confirmOver) {
+  var info = S.pay.info, s = S.pay.student;
+  if (!info || !s) { toast('আগে শিক্ষার্থী ও মাস নির্বাচন করুন।', 'err'); return; }
+  var amt = Number($('payAmt').value.replace(/[০-৯]/g, function (d) { return BN.indexOf(d); }));
+  if (!isFinite(amt) || amt <= 0 || $('payAmt').value.trim() === '') { toast('সঠিক টাকার পরিমাণ লিখুন।', 'err'); return; }
+  var payload = { studentId: s.id, month: S.pay.month || S.cfg.currentMonth, amount: String(amt), method: $('payMethod').value, note: $('payNote').value };
+  var sig = JSON.stringify(payload);
+  // নেটওয়ার্ক ব্যর্থ হলে একই তথ্যে আবার চাপলে একই requestId ব্যবহার হয় — ডুপ্লিকেট হয় না
+  if (!S.pending || S.pending.sig !== sig) S.pending = { sig: sig, requestId: uuid() };
+  payload.requestId = S.pending.requestId;
+  if (!confirmOver) {
+    var ok = await confirmBox('শিক্ষার্থী: ' + s.name + ' (' + s.id + ')\nমাস: ' + monthLabel(payload.month) + '\nজমা: ' + taka(amt) + '\nমাধ্যম: ' + payload.method + '\n\nজমা নিশ্চিত করবেন?', 'হ্যাঁ, জমা নিন');
+    if (!ok) return;
+  } else payload.confirmOverpay = true;
+  var btn = $('paySubmit');
+  if (btn) btn.disabled = true;
+  try {
+    var r = await call('takePayment', payload);
+    if (r.needConfirm) {
+      if (btn) btn.disabled = false;
+      var go = await confirmBox('জমার পরিমাণ (' + taka(amt) + ') বকেয়ার (' + taka(r.due) + ') চেয়ে বেশি।\nএটি "অতিরিক্ত জমা" হিসেবে চিহ্নিত হবে। তবুও নিশ্চিত?', 'হ্যাঁ, জমা নিন');
+      if (go) return submitPay(true);
+      return;
+    }
+    S.pending = null;
+    toast(r.duplicate ? 'এই অনুরোধ আগেই সংরক্ষিত ছিল; একই রশিদ দেখানো হচ্ছে।' : 'পেমেন্ট সংরক্ষিত হয়েছে।', 'ok');
+    showReceipt(r.receipt, !!r.duplicate);
+    await loadPayInfo();
+  } catch (e) {
+    if (e && e.network) {
+      var el = $('payRetry');
+      if (el) el.textContent = 'সংযোগ ব্যর্থ হয়েছে। পেমেন্ট সংরক্ষিত হয়েছে কি না নিশ্চিত নয়। একই তথ্য দিয়ে আবার "জমা নিন" চাপলে ডুপ্লিকেট হবে না।';
+    } else S.pending = null;
+    if (btn) btn.disabled = false;
+    showErr(e);
+  }
+}
+
+/* ================= রশিদ ================= */
+function rrow(label, value, cls) { return '<div class="r-row ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>'; }
+
+function receiptHtml(r, copy) {
+  var c = r.center || {};
+  var h = '<div class="receipt"><div class="r-head"><div class="r-name">' + esc(c.name) + '</div>' +
+    (c.address ? '<div>' + esc(c.address) + '</div>' : '') + (c.phone ? '<div>ফোন: ' + esc(bn(c.phone)) + '</div>' : '') + '</div>';
+  if (r.status !== 'বৈধ') h += '<div class="r-copy">*** বাতিল রশিদ ***</div>';
+  else if (copy) h += '<div class="r-copy">*** কপি ***</div>';
+  h += '<hr class="r-line"><div class="r-title">বেতন জমার রশিদ</div>' +
+    rrow('রশিদ নং', r.receiptNo) + rrow('তারিখ', dt(r.dateTime)) + '<hr class="r-line">' +
+    rrow('শিক্ষার্থী', r.studentName) + rrow('আইডি', r.studentId) + rrow('শ্রেণি/ব্যাচ', r.cls) +
+    rrow('বেতনের মাস', monthLabel(r.month)) + '<hr class="r-line">' +
+    rrow('মাসিক বেতন', taka(r.monthlyFee));
+  if (r.extra > 0) h += rrow('অতিরিক্ত চার্জ', taka(r.extra));
+  if (r.discount > 0) h += rrow('ছাড়', '- ' + taka(r.discount));
+  h += rrow('মোট পাওনা', taka(r.total)) + rrow('আগের জমা', taka(r.prevPaid)) +
+    rrow('বর্তমান জমা', taka(r.current), 'r-big') +
+    rrow('অবশিষ্ট বকেয়া', r.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-r.remaining) + ')' : taka(r.remaining), 'r-big') +
+    '<hr class="r-line">' + rrow('মাধ্যম', r.method) + rrow('গ্রহণকারী', r.receivedBy) +
+    '<hr class="r-line"><div class="r-foot">' + esc(c.footer || 'ধন্যবাদ।') + '</div></div>';
+  return h;
+}
+
+function showReceipt(r, copy) {
+  S.rcpt = { r: r, copy: copy };
+  openModal('<h2>রশিদ প্রিভিউ</h2><div class="receipt-preview">' + receiptHtml(r, copy) + '</div>' +
+    '<div class="row end"><button class="btn" data-act="close-modal">বন্ধ করুন</button>' +
+    '<button class="btn primary" data-act="print-receipt">প্রিন্ট করুন (৮০ মিমি)</button></div>');
+}
+
+async function openReceipt(no) {
+  // পুরোনো রশিদ আবার দেখা/প্রিন্ট — নতুন পেমেন্ট তৈরি হয় না; "কপি" লেখা থাকবে
+  var r = await call('getReceipt', { receiptNo: no, reprint: true });
+  showReceipt(r, true);
+}
+
+function doPrint(html, mode) {
+  var pa = $('printArea');
+  pa.className = mode === 'receipt' ? 'receipt-mode' : 'report-mode';
+  pa.innerHTML = html;
+  $('pageStyle').textContent = mode === 'receipt' ? '@page{size:80mm auto;margin:0}' : '@page{size:A4;margin:12mm}';
+  document.body.classList.add('is-printing');
+  var cleaned = false;
+  function clean() {
+    if (cleaned) return;
+    cleaned = true;
+    document.body.classList.remove('is-printing');
+    pa.innerHTML = ''; $('pageStyle').textContent = '';
+  }
+  window.addEventListener('afterprint', clean, { once: true });
+  setTimeout(function () {
+    try { window.print(); } catch (e) { clean(); toast('প্রিন্ট শুরু করা যায়নি।', 'err'); }
+  }, 150);
+  setTimeout(clean, 120000);
+}
+
+/* ================= রিপোর্ট ও CSV ================= */
+function csvCell(v) {
+  var s = String(v === null || v === undefined ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function downloadCsv(name, rows) {
+  var text = '\ufeff' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+  try {
+    var blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  } catch (e) {
+    openModal('<h3>CSV (কপি করে ব্যবহার করুন)</h3><textarea style="min-height:260px" readonly>' + esc(text) + '</textarea>');
+  }
+}
+function reportPrintHtml(rep) {
+  var h = '<div class="report-print"><h2>' + esc(S.cfg.settings.centerName) + '</h2><div><b>' + esc(rep.title) + '</b></div>' +
+    (rep.sub ? '<div>' + esc(rep.sub) + '</div>' : '') + '<div style="margin-bottom:6px">মুদ্রণের তারিখ: ' + dmy(S.cfg.today) + '</div><table><thead><tr>';
+  rep.head.forEach(function (x) { h += '<th>' + esc(x) + '</th>'; });
+  h += '</tr></thead><tbody>';
+  rep.fmt.forEach(function (r) { h += '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; });
+  h += '</tbody></table>';
+  (rep.footer || []).forEach(function (f) { h += '<div style="margin-top:6px"><b>' + esc(f) + '</b></div>'; });
+  return h + '</div>';
+}
+function reportActions() {
+  return '<div class="row" style="margin:10px 0"><button class="btn" data-act="print-report">প্রিন্ট</button><button class="btn" data-act="csv-report">CSV ডাউনলোড</button></div>';
+}
+
+/* ---- বকেয়া তালিকা ---- */
+async function viewDues() {
+  var cls = '<option value="">সব</option>' + (S.cfg.classes || []).map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+  $('main').innerHTML = '<div class="panel"><div class="toolbar">' +
+    '<div><label>মাস (ফাঁকা = সব মাস)</label><input type="month" id="dueMonth" value="' + esc(S.cfg.currentMonth) + '" placeholder="YYYY-MM"></div>' +
+    '<div><label>শ্রেণি/ব্যাচ</label><select id="dueCls">' + cls + '</select></div>' +
+    '<div><label>অবস্থা</label><select id="dueSt"><option value="">সব বকেয়া</option><option>বকেয়া</option><option>আংশিক পরিশোধিত</option></select></div>' +
+    '<button class="btn primary" data-act="load-dues">দেখুন</button></div><div id="dueResult"></div></div>';
+  await loadDues();
+}
+
+async function loadDues() {
+  var r = await call('dueList', { month: $('dueMonth').value, cls: $('dueCls').value, status: $('dueSt').value });
+  var month = $('dueMonth').value;
+  var head = ['শিক্ষার্থী', 'আইডি', 'শ্রেণি/ব্যাচ', 'মোবাইল', 'মাস', 'মোট পাওনা', 'মোট জমা', 'বকেয়া', 'অবস্থা'];
+  S.rep = {
+    title: 'বকেয়া বেতনের তালিকা', sub: month ? monthLabel(month) : 'সব মাস',
+    head: head,
+    raw: r.rows.map(function (x) { return [x.name, x.studentId, x.cls, x.mobile, x.month, x.total, x.paid, x.due, x.status]; }),
+    fmt: r.rows.map(function (x) { return [x.name, x.studentId, x.cls, bn(x.mobile), monthLabel(x.month), taka(x.total), taka(x.paid), taka(x.due), x.status]; }),
+    footer: ['মোট পাওনা: ' + taka(r.totals.total) + ' | মোট জমা: ' + taka(r.totals.paid) + ' | মোট বকেয়া: ' + taka(r.totals.due)],
+    file: 'bokeya-list.csv'
+  };
+  var rows = r.rows.map(function (x) {
+    return [esc(x.name), esc(x.studentId), esc(x.cls), esc(bn(x.mobile)), esc(monthLabel(x.month)), taka(x.total), taka(x.paid), '<b>' + taka(x.due) + '</b>', badge(x.status),
+      '<button class="btn small" data-act="pay-for" data-id="' + esc(x.studentId) + '" data-month="' + esc(x.month) + '">জমা নিন</button>'];
+  });
+  $('dueResult').innerHTML = '<p><b>' + bn(r.rows.length) + 'টি রেকর্ড — মোট বকেয়া ' + taka(r.totals.due) + '</b></p>' + reportActions() +
+    tbl(head.concat(['']), rows, [5, 6, 7]);
+}
+
+/* ---- রিপোর্ট ---- */
+async function viewReports() {
+  var tabs = [['daily', 'আদায় ও রশিদ'], ['monthly', 'মাসভিত্তিক সারসংক্ষেপ']];
+  var h = '<div class="tabs">' + tabs.map(function (t) { return '<button class="' + (S.reportTab === t[0] ? 'on' : '') + '" data-act="report-tab" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="repBody"></div>';
+  $('main').innerHTML = h;
+  if (S.reportTab === 'monthly') await loadMonthly(); else renderDailyForm();
+}
+
+function renderDailyForm() {
+  $('repBody').innerHTML = '<div class="panel"><div class="toolbar">' +
+    '<div><label>শুরুর তারিখ</label><input type="date" id="repFrom" value="' + esc(S.cfg.today) + '"></div>' +
+    '<div><label>শেষ তারিখ</label><input type="date" id="repTo" value="' + esc(S.cfg.today) + '"></div>' +
+    '<div><label>রশিদ নং / শিক্ষার্থী</label><input id="repQ" placeholder="ঐচ্ছিক"></div>' +
+    '<button class="btn primary" data-act="load-daily">দেখুন</button></div><div id="repResult"></div></div>';
+  loadDaily();
+}
+
+async function loadDaily() {
+  var from = $('repFrom').value, to = $('repTo').value, q = $('repQ').value;
+  var r = await call('listPayments', { from: from, to: to, q: q });
+  var head = ['রশিদ নং', 'তারিখ ও সময়', 'আইডি', 'শিক্ষার্থী', 'শ্রেণি/ব্যাচ', 'বেতনের মাস', 'পরিমাণ', 'মাধ্যম', 'গ্রহণকারী', 'অবস্থা'];
+  var methodLine = Object.keys(r.byMethod).map(function (m) { return m + ': ' + taka(r.byMethod[m]); }).join(' | ');
+  S.rep = {
+    title: 'বেতন আদায়ের রিপোর্ট', sub: (from ? dmy(from) : '…') + ' থেকে ' + (to ? dmy(to) : '…'),
+    head: head,
+    raw: r.rows.map(function (x) { return [x.receipt, x.time, x.studentId, x.name, x.cls, x.month, x.amount, x.method, x.byName, x.status]; }),
+    fmt: r.rows.map(function (x) { return [x.receipt, dt(x.time), x.studentId, x.name, x.cls, monthLabel(x.month), taka(x.amount), x.method, x.byName, x.status]; }),
+    footer: ['মোট আদায় (বৈধ): ' + taka(r.total)].concat(methodLine ? [methodLine] : []),
+    file: 'collection-report.csv'
+  };
+  var rows = r.rows.map(function (x) {
+    return [esc(x.receipt), dt(x.time), esc(x.studentId), esc(x.name), esc(x.cls), esc(monthLabel(x.month)), taka(x.amount), esc(x.method), esc(x.byName), badge(x.status),
+      '<button class="btn small" data-act="receipt" data-no="' + esc(x.receipt) + '">রশিদ</button>' +
+      (S.user.role === 'Admin' && x.status === 'বৈধ' ? ' <button class="btn small danger" data-act="void-pay" data-no="' + esc(x.receipt) + '">বাতিল</button>' : '')];
+  });
+  $('repResult').innerHTML = '<p><b>মোট আদায়: ' + taka(r.total) + '</b> (' + bn(r.rows.length) + 'টি পেমেন্ট)</p>' +
+    (methodLine ? '<p class="muted">' + esc(methodLine) + '</p>' : '') + reportActions() + tbl(head.concat(['']), rows, [6]);
+}
+
+async function loadMonthly() {
+  var r = await call('monthlyReport', {});
+  var head = ['মাস', 'রেকর্ড', 'মোট পাওনা', 'মোট আদায়', 'মোট বকেয়া', 'বকেয়া রেকর্ড'];
+  S.rep = {
+    title: 'মাসভিত্তিক বেতন সারসংক্ষেপ', sub: '',
+    head: head,
+    raw: r.rows.map(function (x) { return [x.month, x.count, x.due, x.paid, x.outstanding, x.unpaidCount]; }),
+    fmt: r.rows.map(function (x) { return [monthLabel(x.month), bn(x.count), taka(x.due), taka(x.paid), taka(x.outstanding), bn(x.unpaidCount)]; }),
+    footer: ['সর্বমোট পাওনা: ' + taka(r.totals.due) + ' | আদায়: ' + taka(r.totals.paid) + ' | বকেয়া: ' + taka(r.totals.outstanding)],
+    file: 'monthly-summary.csv'
+  };
+  $('repBody').innerHTML = '<div class="panel"><p><b>' + esc(S.rep.footer[0]) + '</b></p>' + reportActions() +
+    tbl(head, S.rep.fmt.map(function (x) { return x.map(esc); }), [2, 3, 4]) + '</div>';
+}
+
+/* ================= অ্যাডমিন ================= */
+async function viewAdmin() {
+  var tabs = [['users', 'ইউজার'], ['settings', 'সেটিংস'], ['backup', 'ব্যাকআপ ও এক্সপোর্ট'], ['audit', 'অডিট লগ']];
+  $('main').innerHTML = '<div class="tabs">' + tabs.map(function (t) {
+    return '<button class="' + (S.adminTab === t[0] ? 'on' : '') + '" data-act="admin-tab" data-tab="' + t[0] + '">' + t[1] + '</button>';
+  }).join('') + '</div><div id="admBody"></div>';
+  var t = S.adminTab;
+  if (t === 'users') await admUsers();
+  else if (t === 'settings') await admSettings();
+  else if (t === 'backup') admBackup();
+  else await admAudit();
+}
+
+async function admUsers() {
+  var users = await call('listUsers', {});
+  $('admBody').innerHTML = '<div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h3>অনুমোদিত ইউজার</h3><button class="btn primary" data-act="user-form">+ নতুন ইউজার</button></div>' +
+    '<p class="muted">ইউজার ইমেইলে পাঠানো কোড দিয়ে লগইন করবেন। কোনো পাসওয়ার্ড সংরক্ষণ করা হয় না।</p>' +
+    tbl(['ইমেইল', 'নাম', 'ভূমিকা', 'অবস্থা', 'শেষ লগইন', ''], users.map(function (u) {
+      return [esc(u.email), esc(u.name), esc(u.role), badge(u.status), dt(u.lastLogin) || '—',
+        '<button class="btn small" data-act="user-form" data-email="' + esc(u.email) + '" data-name="' + esc(u.name) + '" data-role="' + esc(u.role) + '" data-status="' + esc(u.status) + '">সম্পাদনা</button>'];
+    })) + '</div>';
+}
+
+function userForm(el) {
+  var d = el ? el.dataset : {}, edit = !!d.email;
+  openModal('<h2>' + (edit ? 'ইউজার সম্পাদনা' : 'নতুন ইউজার') + '</h2>' +
+    '<label>ইমেইল *</label><input id="ufEmail" type="email" value="' + esc(d.email || '') + '"' + (edit ? ' readonly' : '') + '>' +
+    '<label>নাম *</label><input id="ufName" maxlength="100" value="' + esc(d.name || '') + '">' +
+    '<label>ভূমিকা</label><select id="ufRole"><option' + (d.role === 'Staff' ? ' selected' : '') + '>Staff</option><option' + (d.role === 'Admin' ? ' selected' : '') + '>Admin</option></select>' +
+    '<label>অবস্থা</label><select id="ufStatus"><option' + (d.status !== 'নিষ্ক্রিয়' ? ' selected' : '') + '>সক্রিয়</option><option' + (d.status === 'নিষ্ক্রিয়' ? ' selected' : '') + '>নিষ্ক্রিয়</option></select>' +
+    '<div class="row end"><button class="btn" data-act="close-modal">বাতিল</button><button class="btn primary" data-act="save-user">সংরক্ষণ</button></div>');
+}
+
+async function admSettings() {
+  var s = await call('getSettings', {});
+  function f(k, label, area) {
+    return '<label>' + label + '</label>' + (area ? '<textarea id="set_' + k + '">' : '<input id="set_' + k + '" value="' + esc(s[k]) + '">') + (area ? esc(s[k]) + '</textarea>' : '');
+  }
+  $('admBody').innerHTML = '<div class="panel"><h3>কোচিং সেন্টারের সেটিংস</h3>' +
+    f('CENTER_NAME', 'কোচিং সেন্টারের নাম') + f('ADDRESS', 'ঠিকানা') + f('PHONE', 'মোবাইল/ফোন নম্বর') +
+    f('RECEIPT_FOOTER', 'রশিদের নিচের বার্তা') + f('FEE_RULES', 'বেতনের সাধারণ নিয়ম', true) +
+    f('PAYMENT_METHODS', 'পেমেন্টের মাধ্যম (কমা দিয়ে আলাদা করুন)') + f('BACKUP_KEEP', 'কতগুলো ব্যাকআপ রাখা হবে (৫–২০০)') +
+    '<button class="btn primary block" data-act="save-settings">সংরক্ষণ করুন</button></div>';
+}
+
+function admBackup() {
+  $('admBody').innerHTML = '<div class="panel"><h3>ব্যাকআপ</h3><p class="muted">পুরো স্প্রেডশিটের একটি কপি আপনার Google Drive-এর "Coaching-Backups" ফোল্ডারে সংরক্ষিত হবে।</p>' +
+    '<button class="btn primary" data-act="do-backup">এখনই ব্যাকআপ নিন</button></div>' +
+    '<div class="panel"><h3>CSV এক্সপোর্ট</h3><p class="muted">ডাউনলোড করা ফাইলে শিক্ষার্থীর ব্যক্তিগত তথ্য থাকে। কোনো পাবলিক জায়গায় রাখবেন না।</p>' +
+    '<div class="row"><button class="btn" data-act="export" data-name="Students">শিক্ষার্থী</button><button class="btn" data-act="export" data-name="MonthlyFees">মাসিক বেতন</button><button class="btn" data-act="export" data-name="Payments">পেমেন্ট</button></div></div>';
+}
+
+async function admAudit() {
+  var r = await call('auditLog', {});
+  $('admBody').innerHTML = '<div class="panel"><h3>সাম্প্রতিক কার্যক্রম (সর্বশেষ ৩০০)</h3>' +
+    tbl(['সময়', 'ইউজার', 'কাজ', 'রেকর্ড', 'বিবরণ'], r.rows.map(function (x) { return [dt(x.time), esc(x.user), esc(x.action), esc(x.target), esc(x.detail)]; })) + '</div>';
+}
+
+/* ================= ভিউ তালিকা ================= */
+var VIEWS = { dashboard: viewDashboard, students: viewStudents, payment: viewPayment, dues: viewDues, reports: viewReports, admin: viewAdmin };
+
+/* ================= ক্লিক হ্যান্ডলার ================= */
+var ACT = {
+  'send-otp': sendOtp,
+  'verify-otp': verifyOtp,
+  'login-back': function () { $('loginStep1').hidden = false; $('loginStep2').hidden = true; loginMsg(''); },
+  'logout': doLogout,
+  'close-modal': closeModal,
+  'nav': function (el) { return show(el.getAttribute('data-view')); },
+  'new-student': function () { studentForm(null); },
+  'view-student': function (el) { return viewStudent(el.getAttribute('data-id')); },
+  'edit-student': async function (el) {
+    var r = await call('getStudent', { id: el.getAttribute('data-id') });
+    studentForm(r.student);
+  },
+  'save-student': function () { return saveStudent(false); },
+  'toggle-student': async function (el) {
+    var id = el.getAttribute('data-id'), st = el.getAttribute('data-status');
+    var msg = st === 'নিষ্ক্রিয়' ? 'শিক্ষার্থীকে নিষ্ক্রিয় করবেন? পুরোনো বেতন ও পেমেন্টের ইতিহাস সংরক্ষিত থাকবে।' : 'শিক্ষার্থীকে আবার সক্রিয় করবেন?';
+    if (!(await confirmBox(msg))) return;
+    await call('setStudentStatus', { id: id, status: st });
+    toast('অবস্থা পরিবর্তন হয়েছে।', 'ok');
+    closeModal();
+    if (S.view === 'students') loadStudents(); else show(S.view);
+  },
+  'pay-for': async function (el) {
+    var id = el.getAttribute('data-id'), month = el.getAttribute('data-month');
+    var r = await call('getStudent', { id: id });
+    S.pay = { student: r.student, month: month || S.cfg.currentMonth, info: null };
+    S.pending = null;
+    closeModal();
+    await show('payment');
+  },
+  'pick-student': function (el) { return pickStudent(el.getAttribute('data-id')); },
+  'fill-due': function (el) { $('payAmt').value = el.getAttribute('data-due'); },
+  'submit-pay': function () { return submitPay(false); },
+  'receipt': function (el) { return openReceipt(el.getAttribute('data-no')); },
+  'print-receipt': function () { if (S.rcpt) doPrint(receiptHtml(S.rcpt.r, S.rcpt.copy), 'receipt'); },
+  'gen-month': async function (el) {
+    var r = await call('generateMonth', { month: el.getAttribute('data-month') });
+    toast(r.created + 'টি নতুন রেকর্ড তৈরি হয়েছে।', 'ok');
+    show('dashboard');
+  },
+  'adjust-fee': function (el) {
+    var d = el.dataset;
+    openModal('<h2>' + esc(monthLabel(d.month)) + ' — সমন্বয়</h2><p class="muted">মাসিক বেতন: ' + taka(d.base) + '</p>' +
+      '<input type="hidden" id="afSid" value="' + esc(d.id) + '"><input type="hidden" id="afMonth" value="' + esc(d.month) + '">' +
+      '<label>অতিরিক্ত চার্জ (৳)</label><input id="afExtra" inputmode="decimal" value="' + esc(d.extra) + '">' +
+      '<label>ছাড় (৳)</label><input id="afDisc" inputmode="decimal" value="' + esc(d.disc) + '">' +
+      '<label>কারণ/মন্তব্য</label><input id="afNote" maxlength="200" value="' + esc(d.note) + '">' +
+      '<div class="row end"><button class="btn" data-act="close-modal">বাতিল</button><button class="btn primary" data-act="save-adjust">সংরক্ষণ</button></div>');
+  },
+  'save-adjust': async function () {
+    var sid = $('afSid').value;
+    await call('adjustFee', { studentId: sid, month: $('afMonth').value, extra: $('afExtra').value, discount: $('afDisc').value, note: $('afNote').value });
+    toast('সমন্বয় সংরক্ষিত হয়েছে।', 'ok');
+    await viewStudent(sid);
+  },
+  'void-pay': function (el) {
+    var no = el.getAttribute('data-no');
+    openModal('<h2>পেমেন্ট বাতিল: ' + esc(no) + '</h2>' +
+      '<p class="muted">রেকর্ড মুছবে না; শুধু "বাতিল" চিহ্নিত হবে এবং বকেয়া আবার বাড়বে।</p>' +
+      '<input type="hidden" id="vpNo" value="' + esc(no) + '"><label>বাতিলের কারণ *</label><input id="vpReason" maxlength="200">' +
+      '<div class="row end"><button class="btn" data-act="close-modal">ফিরে যান</button><button class="btn danger" data-act="do-void">বাতিল নিশ্চিত করুন</button></div>');
+  },
+  'do-void': async function () {
+    var reason = $('vpReason').value.trim();
+    if (!reason) { toast('বাতিলের কারণ লিখুন।', 'err'); return; }
+    await call('voidPayment', { receiptNo: $('vpNo').value, reason: reason });
+    closeModal();
+    toast('পেমেন্ট বাতিল করা হয়েছে।', 'ok');
+    loadDaily();
+  },
+  'load-dues': loadDues,
+  'load-daily': loadDaily,
+  'report-tab': function (el) { S.reportTab = el.getAttribute('data-tab'); return show('reports'); },
+  'print-report': function () { if (S.rep) doPrint(reportPrintHtml(S.rep), 'report'); },
+  'csv-report': function () {
+    if (!S.rep) return;
+    downloadCsv(S.rep.file, [S.rep.head].concat(S.rep.raw));
+  },
+  'admin-tab': function (el) { S.adminTab = el.getAttribute('data-tab'); return show('admin'); },
+  'user-form': function (el) { userForm(el.getAttribute('data-email') ? el : null); },
+  'save-user': async function () {
+    await call('saveUser', { email: $('ufEmail').value, name: $('ufName').value, role: $('ufRole').value, status: $('ufStatus').value });
+    closeModal(); toast('ইউজার সংরক্ষিত হয়েছে।', 'ok'); show('admin');
+  },
+  'save-settings': async function () {
+    var p = {};
+    ['CENTER_NAME', 'ADDRESS', 'PHONE', 'RECEIPT_FOOTER', 'FEE_RULES', 'PAYMENT_METHODS', 'BACKUP_KEEP'].forEach(function (k) { p[k] = $('set_' + k).value; });
+    await call('saveSettings', p);
+    var b = await call('bootstrap', {});
+    S.cfg = b; $('brandName').textContent = b.settings.centerName;
+    toast('সেটিংস সংরক্ষিত হয়েছে।', 'ok');
+  },
+  'do-backup': async function () {
+    var r = await call('backup', {});
+    toast('ব্যাকআপ তৈরি হয়েছে: ' + r.name, 'ok');
+  },
+  'export': async function (el) {
+    var r = await call('exportData', { name: el.getAttribute('data-name') });
+    downloadCsv(r.name + '.csv', r.rows);
+  }
+};
+
+document.addEventListener('click', function (ev) {
+  var el = ev.target.closest ? ev.target.closest('[data-act]') : null;
+  if (!el) return;
+  var fn = ACT[el.getAttribute('data-act')];
+  if (!fn) return;
+  ev.preventDefault();
+  Promise.resolve().then(function () { return fn(el); }).catch(showErr);
+});
+document.addEventListener('keydown', function (ev) {
+  if (ev.key !== 'Enter') return;
+  if (ev.target.id === 'loginEmail') sendOtp();
+  else if (ev.target.id === 'loginCode') verifyOtp();
+});
+document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeModal(); });
+
+/* ================= শুরু ================= */
+(async function init() {
+  var t = null;
+  try { t = sessionStorage.getItem('ccm_token'); } catch (e) { /* ignore */ }
+  if (!t) return;
+  S.token = t;
+  try { await startApp(); } catch (e) { sessionLost(''); }
+})();
+
+})();
+</script>
+
+</body>
+</html>
