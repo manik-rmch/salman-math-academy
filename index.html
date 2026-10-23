@@ -43,6 +43,8 @@ textarea{min-height:70px;resize:vertical}
 /* লগইন */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
 .login-card{background:var(--c-card);width:100%;max-width:400px;padding:28px 22px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:.9em 0 0;font-size:.92rem}
+.chk input{width:auto;margin-top:.3em}
 .login-msg{min-height:1.4em;margin:.8em 0 0;color:var(--c-err);font-size:.92rem}
 .login-msg.ok{color:var(--c-ok)}
 
@@ -173,6 +175,7 @@ table.rt tfoot td{font-weight:700;background:#f8fafa}
         <p class="muted">ইমেইলে পাঠানো ৬ সংখ্যার কোড লিখুন।</p>
         <label for="loginCode">লগইন কোড</label>
         <input type="text" id="loginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="______">
+        <label class="chk"><input type="checkbox" id="loginRemember"> এই ডিভাইসে ৭ দিন লগইন মনে রাখুন <span class="muted">(শুধু নিজের ডিভাইসে)</span></label>
         <button class="btn primary block" data-act="verify-otp">প্রবেশ করুন</button>
         <button class="btn link block" data-act="login-back">ইমেইল পরিবর্তন / নতুন কোড</button>
       </div>
@@ -224,7 +227,7 @@ table.rt tfoot td{font-weight:700;background:#f8fafa}
 var S = {
   token: null, user: null, cfg: null, view: 'dashboard', adminTab: 'users', reportTab: 'daily',
   dashMonth: null, pay: { student: null, month: null, info: null }, pending: null, sug: {}, rep: null,
-  loginEmail: ''
+  loginEmail: '', remember: false, stuAll: null, stuAt: 0, stuP: null
 };
 var NAV = [
   { id: 'dashboard', label: 'ড্যাশবোর্ড', roles: ['Admin', 'Staff'] },
@@ -357,6 +360,59 @@ function call(action, payload, quiet) {
   return gs.apply(null, a);
 }
 
+/* ================= ব্রাউজারে সংরক্ষণ ও শিক্ষার্থী তালিকার ক্যাশ ================= */
+// শুধু শিক্ষার্থীর তালিকা ক্যাশ হয়। বেতন, বকেয়া, পেমেন্ট ও রিপোর্ট সবসময় সার্ভার থেকে সরাসরি আসে।
+function storeFor(remember) {
+  try { return remember ? window.localStorage : window.sessionStorage; } catch (e) { return null; }
+}
+function clearLocal() {
+  S.stuAll = null; S.stuAt = 0; S.stuP = null; S.remember = false;
+  ['ccm_token', 'ccm_stu'].forEach(function (k) {
+    try { localStorage.removeItem(k); } catch (e) { /* ignore */ }
+    try { sessionStorage.removeItem(k); } catch (e) { /* ignore */ }
+  });
+}
+function loadStuCache() {
+  try {
+    var st = storeFor(S.remember), raw = st && st.getItem('ccm_stu');
+    if (raw) {
+      var o = JSON.parse(raw);
+      if (o && Array.isArray(o.l)) { S.stuAll = o.l; S.stuAt = o.t || 0; }
+    }
+  } catch (e) { /* ignore */ }
+}
+function refreshStudents(force) {
+  if (S.stuP && !force) return S.stuP;
+  var p = call('listStudents', { limit: 2000 }, true).then(function (r) {
+    if (S.stuP === p) S.stuP = null;
+    S.stuAll = r.students; S.stuAt = Date.now();
+    if (S.cfg) S.cfg.classes = r.classes;
+    try { var st = storeFor(S.remember); if (st) st.setItem('ccm_stu', JSON.stringify({ t: S.stuAt, l: r.students })); } catch (e) { /* ignore */ }
+    return r.students;
+  }, function (e) { if (S.stuP === p) S.stuP = null; throw e; });
+  S.stuP = p;
+  return p;
+}
+function getStudents(force) {
+  if (force) return refreshStudents(true);
+  if (S.stuAll && Date.now() - S.stuAt < 180000) return Promise.resolve(S.stuAll);
+  if (S.stuAll) {
+    // পুরোনো ক্যাশ সঙ্গে সঙ্গে দেখাও, পেছনে নতুন তালিকা আনো
+    refreshStudents(false).then(function () { if (S.view === 'students') loadStudents(); }, function () { /* ignore */ });
+    return Promise.resolve(S.stuAll);
+  }
+  return refreshStudents(false);
+}
+function filterStudents(list, q, cls, status, limit) {
+  q = String(q || '').trim().toLowerCase();
+  return list.filter(function (s) {
+    if (cls && s.cls !== cls) return false;
+    if (status && s.status !== status) return false;
+    if (q && (s.name + ' ' + s.id + ' ' + s.cls + ' ' + s.mobile + ' ' + s.guardian).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  }).slice(0, limit);
+}
+
 /* ================= লগইন ================= */
 function loginMsg(msg, ok) { var el = $('loginMsg'); el.textContent = msg || ''; el.className = 'login-msg' + (ok ? ' ok' : ''); }
 
@@ -375,9 +431,11 @@ async function verifyOtp() {
   var code = $('loginCode').value.trim();
   if (!code) { loginMsg('কোড লিখুন।'); return; }
   try {
-    var r = await gs('verifyOtp', S.loginEmail, code);
-    S.token = r.token; S.user = r.user;
-    try { sessionStorage.setItem('ccm_token', S.token); } catch (e) { /* ignore */ }
+    var rem = !!$('loginRemember').checked;
+    var r = await gs('verifyOtp', S.loginEmail, code, rem);
+    clearLocal();
+    S.token = r.token; S.user = r.user; S.remember = rem;
+    try { var st = storeFor(rem); if (st) st.setItem('ccm_token', S.token); } catch (e) { /* ignore */ }
     $('loginCode').value = '';
     loginMsg('');
     await startApp();
@@ -385,7 +443,7 @@ async function verifyOtp() {
 }
 function sessionLost(msg) {
   S.token = null; S.user = null;
-  try { sessionStorage.removeItem('ccm_token'); } catch (e) { /* ignore */ }
+  clearLocal();
   $('appScreen').hidden = true; $('loginScreen').hidden = false;
   $('loginStep1').hidden = false; $('loginStep2').hidden = true;
   closeModal();
@@ -402,6 +460,8 @@ async function doLogout() {
 async function startApp() {
   var b = await call('bootstrap', {});
   S.user = b.user; S.cfg = b;
+  loadStuCache();
+  getStudents(false).catch(function () { /* ignore */ });
   S.dashMonth = b.currentMonth;
   S.pay = { student: null, month: b.currentMonth, info: null };
   $('loginScreen').hidden = true; $('appScreen').hidden = false;
@@ -479,7 +539,11 @@ async function viewStudents() {
 async function loadStudents(first) {
   var q = $('stuQ'), cls = $('stuCls'), st = $('stuSt');
   if (!q) return;
-  var r = await call('listStudents', { q: q.value, cls: cls.value, status: st.value }, !first);
+  var all = await getStudents(false);
+  if (!$('stuQ')) return;
+  var cset = {};
+  all.forEach(function (s) { if (s.cls) cset[s.cls] = 1; });
+  var r = { classes: Object.keys(cset).sort(), students: filterStudents(all, q.value, cls.value, st.value, 2000) };
   S.cfg.classes = r.classes;
   var cur = cls.value, o = '<option value="">সব</option>';
   r.classes.forEach(function (c) { o += '<option' + (c === cur ? ' selected' : '') + ' value="' + esc(c) + '">' + esc(c) + '</option>'; });
@@ -550,6 +614,7 @@ async function saveStudent(confirmDuplicate) {
     return;
   }
   closeModal();
+  try { await getStudents(true); } catch (e) { /* ignore */ }
   toast('শিক্ষার্থীর তথ্য সংরক্ষিত হয়েছে (আইডি: ' + r.id + ')', 'ok');
   if (S.view === 'students') loadStudents(); else if (S.view === 'dashboard') show('dashboard');
 }
@@ -567,7 +632,7 @@ async function viewPayment() {
 async function searchPayStudent() {
   var q = $('payQ').value.trim();
   if (q.length < 2) { $('paySug').innerHTML = ''; return; }
-  var r = await call('listStudents', { q: q, limit: 8 }, true);
+  var r = { students: filterStudents(await getStudents(false), q, '', '', 8) };
   S.sug = {};
   r.students.forEach(function (s) { S.sug[s.id] = s; });
   $('paySug').innerHTML = r.students.length ? r.students.map(function (s) {
@@ -917,6 +982,7 @@ var ACT = {
     var msg = st === 'নিষ্ক্রিয়' ? 'শিক্ষার্থীকে নিষ্ক্রিয় করবেন? পুরোনো বেতন ও পেমেন্টের ইতিহাস সংরক্ষিত থাকবে।' : 'শিক্ষার্থীকে আবার সক্রিয় করবেন?';
     if (!(await confirmBox(msg))) return;
     await call('setStudentStatus', { id: id, status: st });
+    try { await getStudents(true); } catch (e) { /* ignore */ }
     toast('অবস্থা পরিবর্তন হয়েছে।', 'ok');
     closeModal();
     if (S.view === 'students') loadStudents(); else show(S.view);
@@ -1019,7 +1085,8 @@ document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') cl
 /* ================= শুরু ================= */
 (async function init() {
   var t = null;
-  try { t = sessionStorage.getItem('ccm_token'); } catch (e) { /* ignore */ }
+  try { t = localStorage.getItem('ccm_token'); if (t) S.remember = true; } catch (e) { /* ignore */ }
+  if (!t) { try { t = sessionStorage.getItem('ccm_token'); } catch (e) { /* ignore */ } }
   if (!t) return;
   S.token = t;
   try { await startApp(); } catch (e) { sessionLost(''); }
