@@ -137,6 +137,7 @@ table.rt tfoot td{font-weight:700;background:#f8fafa}
 .receipt .r-row span{flex:0 0 auto;max-width:52%}
 .receipt .r-row b{text-align:right;overflow-wrap:anywhere;font-weight:600}
 .receipt .r-big b{font-size:14px}
+.receipt .r-sub{font-size:11px;margin:0 0 4px 6px;overflow-wrap:anywhere}
 .receipt .r-foot{text-align:center;margin-top:6px;overflow-wrap:anywhere}
 
 /* প্রিন্ট */
@@ -226,7 +227,7 @@ table.rt tfoot td{font-weight:700;background:#f8fafa}
 /* ================= অবস্থা ================= */
 var S = {
   token: null, user: null, cfg: null, view: 'dashboard', adminTab: 'users', reportTab: 'daily',
-  dashMonth: null, pay: { student: null, month: null, info: null }, pending: null, sug: {}, rep: null,
+  dashMonth: null, pay: { student: null, month: null, info: null }, pending: null, pendingM: null, sug: {}, rep: null,
   loginEmail: '', remember: false, stuAll: null, stuAt: 0, stuP: null
 };
 var NAV = [
@@ -685,7 +686,9 @@ function renderPayForm(info) {
     '<div><label>পেমেন্টের মাধ্যম</label><select id="payMethod">' + methods.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select></div></div>' +
     '<div class="row" style="margin:6px 0"><button class="btn small" data-act="fill-due" data-due="' + Math.max(f.due, 0) + '">পুরো বকেয়া বসান</button></div>' +
     '<label>মন্তব্য (ঐচ্ছিক)</label><input id="payNote" maxlength="300">' +
-    '<button class="btn primary block" id="paySubmit" data-act="submit-pay">৫. যাচাই করে জমা নিন</button>' +
+    '<button class="btn primary block" id="paySubmit" data-act="submit-pay">৫. যাচাই করে জমা নিন (এই মাসে)</button>' +
+    '<button class="btn block" id="payMultiBtn" data-act="submit-multi">অথবা: টাকা পুরোনো বকেয়া মাস থেকে ভাগ করে জমা নিন</button>' +
+    '<p class="muted">দ্বিতীয় বাটনে একসাথে কয়েক মাসের টাকা দিলে সবচেয়ে পুরোনো বকেয়া থেকে শুরু করে মাস ধরে ভাগ হবে। সব বকেয়া শেষ হলে বাকি টাকা আগামী মাসের অগ্রিম হিসেবে যাবে। ভাগ দেখে নিশ্চিত করতে হবে এবং একটি রশিদ পাবেন।</p>' +
     '<p id="payRetry" class="muted"></p>';
   $('payInfo').innerHTML = h;
 }
@@ -728,6 +731,39 @@ async function submitPay(confirmOver) {
   }
 }
 
+async function submitMulti() {
+  var s = S.pay.student;
+  if (!s) { toast('আগে শিক্ষার্থী নির্বাচন করুন।', 'err'); return; }
+  var raw = $('payAmt').value.replace(/[০-৯]/g, function (d) { return BN.indexOf(d); });
+  var amt = Number(raw);
+  if (!isFinite(amt) || amt <= 0 || raw.trim() === '') { toast('সঠিক টাকার পরিমাণ লিখুন।', 'err'); return; }
+  var payload = { studentId: s.id, amount: String(amt), method: $('payMethod').value, note: $('payNote').value };
+  payload.preview = true;
+  var pv = await call('payMulti', payload);
+  var lines = pv.plan.map(function (x) { return monthLabel(x.month) + ': ' + taka(x.pay) + (x.future ? ' (অগ্রিম)' : '') + (x.pay < x.due ? ' (আংশিক; বাকি ' + taka(x.due - x.pay) + ')' : ''); }).join('\n');
+  var ok = await confirmBox('শিক্ষার্থী: ' + s.name + ' (' + s.id + ')\nমোট জমা: ' + taka(amt) + '\nমাধ্যম: ' + payload.method + '\n\nভাগ:\n' + lines + '\n\nনিশ্চিত করবেন?', 'হ্যাঁ, জমা নিন');
+  if (!ok) return;
+  var sig = JSON.stringify([payload.studentId, payload.amount, payload.method, payload.note]);
+  if (!S.pendingM || S.pendingM.sig !== sig) S.pendingM = { sig: sig, requestId: uuid() };
+  payload.preview = false; payload.requestId = S.pendingM.requestId;
+  var btn = $('payMultiBtn');
+  if (btn) btn.disabled = true;
+  try {
+    var r = await call('payMulti', payload);
+    S.pendingM = null;
+    toast(r.duplicate ? 'এই অনুরোধ আগেই সংরক্ষিত ছিল; একই রশিদ দেখানো হচ্ছে।' : 'পেমেন্ট সংরক্ষিত হয়েছে।', 'ok');
+    showReceipt(r.receipt, !!r.duplicate);
+    await loadPayInfo();
+  } catch (e) {
+    if (e && e.network) {
+      var el = $('payRetry');
+      if (el) el.textContent = 'সংযোগ ব্যর্থ হয়েছে। পেমেন্ট সংরক্ষিত হয়েছে কি না নিশ্চিত নয়। একই তথ্য দিয়ে আবার চাপলে ডুপ্লিকেট হবে না।';
+    } else S.pendingM = null;
+    if (btn) btn.disabled = false;
+    showErr(e);
+  }
+}
+
 /* ================= রশিদ ================= */
 function rrow(label, value, cls) { return '<div class="r-row ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>'; }
 
@@ -739,15 +775,23 @@ function receiptHtml(r, copy) {
   else if (copy) h += '<div class="r-copy">*** কপি ***</div>';
   h += '<hr class="r-line"><div class="r-title">বেতন জমার রশিদ</div>' +
     rrow('রশিদ নং', r.receiptNo) + rrow('তারিখ', dt(r.dateTime)) + '<hr class="r-line">' +
-    rrow('শিক্ষার্থী', r.studentName) + rrow('আইডি', r.studentId) + rrow('শ্রেণি/ব্যাচ', r.cls) +
-    rrow('বেতনের মাস', monthLabel(r.month)) + '<hr class="r-line">' +
-    rrow('মাসিক বেতন', taka(r.monthlyFee));
-  if (r.extra > 0) h += rrow('অতিরিক্ত চার্জ', taka(r.extra));
-  if (r.discount > 0) h += rrow('ছাড়', '- ' + taka(r.discount));
-  h += rrow('মোট পাওনা', taka(r.total)) + rrow('আগের জমা', taka(r.prevPaid)) +
-    rrow('বর্তমান জমা', taka(r.current), 'r-big') +
-    rrow('অবশিষ্ট বকেয়া', r.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-r.remaining) + ')' : taka(r.remaining), 'r-big') +
-    '<hr class="r-line">' + rrow('মাধ্যম', r.method) + rrow('গ্রহণকারী', r.receivedBy) +
+    rrow('শিক্ষার্থী', r.studentName) + rrow('আইডি', r.studentId) + rrow('শ্রেণি/ব্যাচ', r.cls) + '<hr class="r-line">';
+  if (r.items && r.items.length > 1) {
+    r.items.forEach(function (it) {
+      var rem = it.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-it.remaining) + ')' : taka(it.remaining);
+      h += rrow(monthLabel(it.month), taka(it.current)) +
+        '<div class="r-sub">পাওনা ' + esc(taka(it.total)) + ' · আগের জমা ' + esc(taka(it.prevPaid)) + ' · বাকি ' + esc(rem) + '</div>';
+    });
+    h += '<hr class="r-line">' + rrow('মোট জমা', taka(r.currentTotal), 'r-big');
+  } else {
+    h += rrow('বেতনের মাস', monthLabel(r.month)) + '<hr class="r-line">' + rrow('মাসিক বেতন', taka(r.monthlyFee));
+    if (r.extra > 0) h += rrow('অতিরিক্ত চার্জ', taka(r.extra));
+    if (r.discount > 0) h += rrow('ছাড়', '- ' + taka(r.discount));
+    h += rrow('মোট পাওনা', taka(r.total)) + rrow('আগের জমা', taka(r.prevPaid)) +
+      rrow('বর্তমান জমা', taka(r.current), 'r-big') +
+      rrow('অবশিষ্ট বকেয়া', r.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-r.remaining) + ')' : taka(r.remaining), 'r-big');
+  }
+  h += '<hr class="r-line">' + rrow('মাধ্যম', r.method) + rrow('গ্রহণকারী', r.receivedBy) +
     '<hr class="r-line"><div class="r-foot">' + esc(c.footer || 'ধন্যবাদ।') + '</div></div>';
   return h;
 }
@@ -998,6 +1042,7 @@ var ACT = {
   'pick-student': function (el) { return pickStudent(el.getAttribute('data-id')); },
   'fill-due': function (el) { $('payAmt').value = el.getAttribute('data-due'); },
   'submit-pay': function () { return submitPay(false); },
+  'submit-multi': submitMulti,
   'receipt': function (el) { return openReceipt(el.getAttribute('data-no')); },
   'print-receipt': function () { if (S.rcpt) doPrint(receiptHtml(S.rcpt.r, S.rcpt.copy), 'receipt'); },
   'gen-month': async function (el) {
