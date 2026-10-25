@@ -53,8 +53,9 @@ input.dmy{letter-spacing:.04em}
 .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
 
 /* ================= লগইন ================= */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--grad);background-size:220% 220%;animation:shift 18s ease infinite}
-.login-card{background:rgba(255,255,255,.97);width:100%;max-width:410px;padding:26px 22px 18px;border-radius:20px;box-shadow:0 20px 50px rgba(15,23,42,.3)}
+.login-wrap{min-height:100vh;display:flex;align-items:stretch;justify-content:center;padding:0;background:var(--grad);background-size:220% 220%;animation:shift 18s ease infinite}
+.login-card{background:rgba(255,255,255,.82);width:100%;min-height:100vh;padding:28px 20px 18px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.login-card>*{width:100%;max-width:420px}
 .login-logo{display:flex;justify-content:center;margin-bottom:6px}
 .login-card h1{text-align:center;font-size:1.7rem;margin-bottom:.15em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .login-card .muted{text-align:center}
@@ -201,12 +202,11 @@ table.rt tbody tr:hover{background:#f8fafc}
 </head>
 <body>
 
-  <!-- লগইন (একটি পপআপ; নিচে বামে ইউজার, ডানে এডমিন) -->
+  <!-- লগইন (একটি পপআপ; নিচে বামে ইউজার, ডানে অ্যাডমিন) -->
   <div id="loginScreen" class="login-wrap">
     <div class="login-card">
       <div class="login-logo" id="loginLogo"></div>
       <h1>সালমান গণিত একাডেমি</h1>
-      <p class="muted">শুধু অনুমোদিত ব্যক্তি প্রবেশ করতে পারবেন।</p>
 
       <!-- ইউজার (Owner / Staff): আইডি + পাসওয়ার্ড -->
       <div id="paneUser">
@@ -214,14 +214,14 @@ table.rt tbody tr:hover{background:#f8fafc}
         <input type="text" id="loginUid" autocomplete="username" autocapitalize="none" spellcheck="false">
         <label for="loginPw">পাসওয়ার্ড</label>
         <input type="password" id="loginPw" autocomplete="current-password">
-        <label class="chk"><input type="checkbox" id="loginRememberU"> এই ডিভাইসে ৭ দিন লগইন মনে রাখুন <span class="muted">(শুধু নিজের ডিভাইসে)</span></label>
+        <label class="chk"><input type="checkbox" id="loginRememberU"> লগইন মনে রাখুন</label>
         <button class="btn primary block" data-act="user-login">লগইন</button>
       </div>
 
-      <!-- এডমিন: ইমেইল + ইমেইলে পাঠানো কোড (OTP) -->
+      <!-- অ্যাডমিন: ইমেইল + ইমেইলে পাঠানো কোড (OTP) -->
       <div id="paneAdmin" hidden>
         <div id="loginStep1">
-          <label for="loginEmail">এডমিনের ইমেইল</label>
+          <label for="loginEmail">অ্যাডমিনের ইমেইল</label>
           <input type="email" id="loginEmail" autocomplete="email" placeholder="example@gmail.com">
           <button class="btn primary block" data-act="send-otp">লগইন কোড পাঠান</button>
         </div>
@@ -229,7 +229,7 @@ table.rt tbody tr:hover{background:#f8fafc}
           <p class="muted">ইমেইলে পাঠানো ৬ সংখ্যার কোড লিখুন।</p>
           <label for="loginCode">লগইন কোড</label>
           <input type="text" id="loginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="______">
-          <label class="chk"><input type="checkbox" id="loginRemember"> এই ডিভাইসে ৭ দিন লগইন মনে রাখুন <span class="muted">(শুধু নিজের ডিভাইসে)</span></label>
+          <label class="chk"><input type="checkbox" id="loginRemember"> লগইন মনে রাখুন</label>
           <button class="btn primary block" data-act="verify-otp">প্রবেশ করুন</button>
           <button class="btn link block" data-act="login-back">ইমেইল পরিবর্তন / নতুন কোড</button>
         </div>
@@ -238,7 +238,7 @@ table.rt tbody tr:hover{background:#f8fafc}
       <p id="loginMsg" class="login-msg" role="alert"></p>
       <div class="seg">
         <button class="on" data-act="login-mode" data-mode="user" id="segUser">ইউজার</button>
-        <button data-act="login-mode" data-mode="admin" id="segAdmin">এডমিন</button>
+        <button data-act="login-mode" data-mode="admin" id="segAdmin">অ্যাডমিন</button>
       </div>
     </div>
   </div>
@@ -672,8 +672,7 @@ async function viewDashboard() {
     card('k3', '⏳', 'মোট বকেয়া বেতন', taka(d.totalArrears), 'সব মাস মিলিয়ে') +
     card('k4', '📋', 'বকেয়া আছে এমন শিক্ষার্থী', bn(d.arrearsStudents) + ' জন', '') + '</div>';
   if (d.lastAutoBackup !== undefined) {
-    h += '<div class="panel slim">💾 শেষ স্বয়ংক্রিয় ব্যাকআপ: <b>' + (d.lastAutoBackup ? dt(d.lastAutoBackup) : 'এখনও হয়নি') + '</b>' +
-      (d.lastAutoBackup ? '' : ' <span class="muted">(সেটআপে একবার setupSystem চালালে প্রতি রাতে চালু হয়)</span>') + '</div>';
+    h += '<div class="panel slim">💾 শেষ স্বয়ংক্রিয় ব্যাকআপ: <b>' + (d.lastAutoBackup ? dt(d.lastAutoBackup) : 'এখনও হয়নি') + '</b></div>';
   }
   h += '<div class="panel"><h3>মাসভিত্তিক আদায়ের সংক্ষিপ্ত হিসাব (সর্বশেষ ৬ মাস)</h3>';
   h += tbl(['মাস', 'মোট পাওনা', 'আদায়', 'বকেয়া'], d.history.map(function (r) {
@@ -1054,7 +1053,7 @@ function renderDailyForm() {
     '<div><label>শেষ তারিখ (dd/mm/yyyy)</label>' + dmyInput('repTo', S.cfg.today) + '</div>' +
     '<div><label>রশিদ নং / শিক্ষার্থী</label><input id="repQ" placeholder="ঐচ্ছিক"></div>' +
     '<button class="btn primary" data-act="load-daily">দেখুন</button></div>' +
-    (isMgr() ? '' : '<p class="muted">আপনি শুধু নিজের নেওয়া জমা দেখতে পাবেন।</p>') + '<div id="repResult"></div></div>';
+    '<div id="repResult"></div></div>';
   loadDaily();
 }
 
@@ -1115,14 +1114,11 @@ async function viewAdmin() {
 
 async function admUsers() {
   var users = await call('listUsers', {});
-  var note = S.user.role === 'Admin'
-    ? 'Admin: ইমেইলে পাঠানো কোড (OTP) দিয়ে ঢোকে। Owner ও Staff: লগইন আইডি + পাসওয়ার্ড দিয়ে ঢোকে। Owner শুধু Staff যোগ ও পরিচালনা করতে পারে।'
-    : 'আপনি শুধু Staff যোগ ও পরিচালনা করতে পারবেন। Staff আইডি ও পাসওয়ার্ড দিয়ে লগইন করবে।';
   $('admBody').innerHTML = '<div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h3>অনুমোদিত ইউজার</h3><button class="btn primary" data-act="user-form">＋ নতুন ইউজার</button></div>' +
-    '<p class="muted">' + note + '</p>' +
-    tbl(['লগইন (ইমেইল/আইডি)', 'নাম', 'ভূমিকা', 'অবস্থা', 'শেষ লগইন', ''], users.map(function (u) {
+        tbl(['লগইন (ইমেইল/আইডি)', 'নাম', 'ভূমিকা', 'অবস্থা', 'শেষ লগইন', ''], users.map(function (u) {
       return [esc(u.email || u.userId), esc(u.name), esc(ROLE_BN[u.role] || u.role), badge(u.status), dt(u.lastLogin) || '—',
-        '<button class="btn small" data-act="user-form" data-email="' + esc(u.email) + '" data-uid="' + esc(u.userId) + '" data-name="' + esc(u.name) + '" data-role="' + esc(u.role) + '" data-status="' + esc(u.status) + '">সম্পাদনা</button>'];
+        '<button class="btn small" data-act="user-form" data-email="' + esc(u.email) + '" data-uid="' + esc(u.userId) + '" data-name="' + esc(u.name) + '" data-role="' + esc(u.role) + '" data-status="' + esc(u.status) + '">সম্পাদনা</button>' +
+          ((u.email || u.userId) === S.user.email ? '' : ' <button class="btn small danger" data-act="del-user" data-email="' + esc(u.email) + '" data-uid="' + esc(u.userId) + '" data-name="' + esc(u.name) + '">মুছুন</button>')];
     })) + '</div>';
 }
 
@@ -1273,6 +1269,12 @@ var ACT = {
   'save-user': async function () {
     await call('saveUser', { role: $('ufRole').value, email: $('ufEmail').value, userId: $('ufUid').value, password: $('ufPw').value, name: $('ufName').value, status: $('ufStatus').value });
     closeModal(); toast('ইউজার সংরক্ষিত হয়েছে।', 'ok'); show('admin');
+  },
+  'del-user': async function (el) {
+    var d = el.dataset;
+    if (!(await confirmBox('"' + d.name + '" (' + (d.email || d.uid) + ') ইউজারকে মুছে ফেলবেন? আগের কার্যকলাপের লগ থেকে যাবে।', 'হ্যাঁ, মুছুন'))) return;
+    await call('deleteUser', { email: d.email, userId: d.uid });
+    toast('ইউজার মুছে ফেলা হয়েছে।', 'ok'); show('admin');
   },
   'pw-form': pwForm,
   'save-pw': async function () {
