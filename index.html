@@ -924,7 +924,6 @@ function studentForm(s) {
     '<div><label>ভর্তির তারিখ * (dd/mm/yyyy)</label>' + dmyInput('sfAdmit', s.admission || S.cfg.today) + '</div>' +
     '<div><label>মাসিক বেতন (৳) *</label><input id="sfFee" inputmode="decimal" value="' + esc(s.fee === undefined ? '' : s.fee) + '"></div></div>' +
     '<label>অতিরিক্ত মন্তব্য</label><textarea id="sfNote" maxlength="300">' + esc(s.note || '') + '</textarea>' +
-    (s.id ? '<p class="muted">মাসিক বেতন বদলালে শুধু ভবিষ্যতের মাসের রেকর্ডে নতুন বেতন প্রযোজ্য হবে; আগের মাসের হিসাব বদলাবে না।</p>' : '') +
     '<div class="row end"><button class="btn" data-act="close-modal">বাতিল</button><button class="btn primary" data-act="save-student">সংরক্ষণ করুন</button></div>');
 }
 
@@ -995,6 +994,7 @@ async function loadPayInfo() {
 
 function renderPayForm(info) {
   var methods = S.cfg.settings.methods, mgr = isMgr();
+  var inactive = info.student.status !== 'সক্রিয়' && !info.rows.length;
   var h = '<h3>২. বকেয়ার হিসাব</h3>';
   if (info.rows.length) {
     h += tbl(['মাস', 'মাসিক বেতন', 'অতিরিক্ত চার্জ', 'ছাড়', 'মোট পাওনা', 'আগের জমা', 'বকেয়া', ''], info.rows.map(function (f) {
@@ -1003,16 +1003,16 @@ function renderPayForm(info) {
     }), [1, 2, 3, 4, 5, 6]);
     h += '<div class="totalbar"><span>মোট বকেয়া (' + bn(info.rows.length) + ' মাস)</span><span>' + taka(info.totalDue) + '</span></div>';
   } else {
-    h += '<p class="muted">এই শিক্ষার্থীর কোনো বকেয়া নেই। টাকা দিলে আগামী মাসের অগ্রিম হিসেবে যাবে।</p>';
+    h += inactive ? '<p class="err">এই শিক্ষার্থী নিষ্ক্রিয় এবং কোনো বকেয়া নেই, তাই জমা নেওয়া যাবে না। জমা নিতে আগে শিক্ষার্থীকে সক্রিয় করুন।</p>' : '<p class="muted">কোনো বকেয়া নেই।</p>';
   }
+  if (inactive) { $('payBox').innerHTML = h; return; }
   h += '<h3 style="margin-top:14px">৩. জমা নিন</h3>' +
-    '<div class="grid2"><div><label>জমার তারিখ (dd/mm/yyyy)</label>' + dmyInput('payDate', '') + '<span class="muted">ফাঁকা রাখলে আজকের তারিখ ধরা হবে</span></div>' +
+    '<div class="grid2"><div><label>জমার তারিখ (dd/mm/yyyy)</label>' + dmyInput('payDate', '') + '</div>' +
     '<div><label>পেমেন্টের মাধ্যম</label><select id="payMethod">' + methods.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select></div>' +
     '<div><label>জমার পরিমাণ (৳)</label><input id="payAmt" inputmode="decimal" placeholder="যেমন: 1500"></div>' +
     '<div><label>মন্তব্য (ঐচ্ছিক)</label><input id="payNote" maxlength="300"></div></div>' +
     (info.totalDue > 0 ? '<div class="row" style="margin:8px 0"><button class="btn small" data-act="fill-due" data-due="' + info.totalDue + '">পুরো বকেয়া বসান</button></div>' : '') +
     '<button class="btn primary block" id="paySubmit" data-act="submit-pay">জমা নিন</button>' +
-    '<p class="muted">টাকা সবচেয়ে পুরোনো বকেয়া মাস থেকে শুরু করে মাস ধরে ভাগ হবে। বকেয়া শেষ হলে বাকি টাকা আগামী মাসের অগ্রিমে যাবে (সর্বোচ্চ ১২ মাস)। ভাগ দেখে নিশ্চিত করার পর একটি রশিদ পাবেন।</p>' +
     '<p id="payRetry" class="muted"></p>';
   $('payBox').innerHTML = h;
 }
@@ -1150,7 +1150,8 @@ function reportPrintHtml(rep) {
   return h + '</div>';
 }
 function reportActions() {
-  return '<div class="row" style="margin:10px 0"><button class="btn" data-act="print-report">প্রিন্ট</button><button class="btn" data-act="csv-report">CSV ডাউনলোড</button></div>';
+  return '<div class="row" style="margin:10px 0"><button class="btn" data-act="print-report">প্রিন্ট</button>' +
+    (isMgr() ? '<button class="btn" data-act="csv-report">CSV ডাউনলোড</button>' : '') + '</div>';
 }
 
 /* ---- বকেয়া তালিকা: ভর্তির মাস থেকে আজ পর্যন্ত যার যা বাকি, সবাই থাকবে ---- */
@@ -1327,7 +1328,6 @@ async function admSettings() {
     f('RECEIPT_FOOTER', 'রশিদের নিচের বার্তা') + f('FEE_RULES', 'বেতনের সাধারণ নিয়ম', true) +
     f('PAYMENT_METHODS', 'পেমেন্টের মাধ্যম (কমা দিয়ে আলাদা করুন)') + f('BACKUP_KEEP', 'কতগুলো ব্যাকআপ রাখা হবে (৫–২০০; ডিফল্ট ৩০)') +
     '<h3 style="margin-top:18px">হোম পাতার লেখা (লগইন ছাড়াই সবাই দেখবে)</h3>' +
-    '<p class="muted">খালি রাখলে ওই অংশ হোম পাতায় আসবে না। শিক্ষার্থী বা টাকার কোনো তথ্য এখানে লিখবেন না।</p>' +
     f('HOME_TAGLINE', 'ট্যাগলাইন') + f('HOME_CLASSES', 'কোন শ্রেণির জন্য (যেমন: ৬ষ্ঠ থেকে ১০ম শ্রেণি)') +
     f('HOME_ABOUT', 'আমাদের সম্পর্কে', true) + f('HOME_COURSES', 'কোর্স সমূহ', true) + f('HOME_FEES', 'ফি ও ভর্তি', true) +
     f('HOME_NOTICE', 'নোটিশ', true) + f('HOME_CONTACT', 'যোগাযোগ (ঠিকানা ও ফোনের নিচে যা যোগ হবে)', true) +
@@ -1335,9 +1335,9 @@ async function admSettings() {
 }
 
 function admBackup() {
-  $('admBody').innerHTML = '<div class="panel"><h3>ব্যাকআপ</h3><p class="muted">প্রতি রাত ২টা–৩টার মধ্যে পুরো শিটের কপি আপনার Google Drive-এর "Salman-Math-Backups" ফোল্ডারে নিজে জমা হয়। সর্বশেষ কপিগুলো থাকে; পুরোনোগুলো Drive-এর ট্র্যাশে যায় (স্থায়ীভাবে মোছে না)।</p>' +
+  $('admBody').innerHTML = '<div class="panel"><h3>ব্যাকআপ</h3>' +
     '<button class="btn primary" data-act="do-backup">এখনই ব্যাকআপ নিন</button></div>' +
-    '<div class="panel"><h3>CSV এক্সপোর্ট</h3><p class="muted">ডাউনলোড করা ফাইলে শিক্ষার্থীর ব্যক্তিগত তথ্য থাকে। কোনো পাবলিক জায়গায় রাখবেন না।</p>' +
+    '<div class="panel"><h3>CSV এক্সপোর্ট</h3>' +
     '<div class="row"><button class="btn" data-act="export" data-name="Students">শিক্ষার্থী</button><button class="btn" data-act="export" data-name="MonthlyFees">মাসিক বেতন</button><button class="btn" data-act="export" data-name="Payments">পেমেন্ট</button></div></div>';
 }
 
@@ -1402,7 +1402,7 @@ var ACT = {
   },
   'adjust-fee': function (el) {
     var d = el.dataset;
-    openModal('<h2>' + esc(monthLabel(d.month)) + ' — অতিরিক্ত চার্জ / ছাড়</h2><p class="muted">মাসিক বেতন: ' + taka(d.base) + '। যে সংখ্যা লিখবেন সেটিই এই মাসের চার্জ/ছাড় হবে (ফাঁকা বা ০ মানে নেই)।</p>' +
+    openModal('<h2>' + esc(monthLabel(d.month)) + ' — অতিরিক্ত চার্জ / ছাড়</h2><p class="muted">মাসিক বেতন: ' + taka(d.base) + '</p>' +
       '<input type="hidden" id="afSid" value="' + esc(d.id) + '"><input type="hidden" id="afMonth" value="' + esc(d.month) + '">' +
       '<label>অতিরিক্ত চার্জ (৳) — পাওনা বাড়াবে</label><input id="afExtra" inputmode="decimal" value="' + esc(d.extra) + '">' +
       '<label>ছাড় (৳) — পাওনা কমাবে</label><input id="afDisc" inputmode="decimal" value="' + esc(d.disc) + '">' +
@@ -1418,7 +1418,6 @@ var ACT = {
   'void-pay': function (el) {
     var no = el.getAttribute('data-no');
     openModal('<h2>পেমেন্ট বাতিল: ' + esc(no) + '</h2>' +
-      '<p class="muted">রেকর্ড মুছবে না; শুধু "বাতিল" চিহ্নিত হবে এবং বকেয়া আবার বাড়বে। একাধিক মাসের একটি রশিদ হলে সব মাসের জমা একসাথে বাতিল হবে।</p>' +
       '<input type="hidden" id="vpNo" value="' + esc(no) + '"><label>বাতিলের কারণ *</label><input id="vpReason" maxlength="200">' +
       '<div class="row end"><button class="btn" data-act="close-modal">ফিরে যান</button><button class="btn danger" data-act="do-void">বাতিল নিশ্চিত করুন</button></div>');
   },
@@ -1435,7 +1434,7 @@ var ACT = {
   'report-tab': function (el) { S.reportTab = el.getAttribute('data-tab'); return show('reports'); },
   'print-report': function () { if (S.rep) doPrint(reportPrintHtml(S.rep), 'report'); },
   'csv-report': function () {
-    if (!S.rep) return;
+    if (!S.rep || !isMgr()) return;
     downloadCsv(S.rep.file, [S.rep.head].concat(S.rep.raw));
   },
   'admin-tab': function (el) { S.adminTab = el.getAttribute('data-tab'); return show('admin'); },
