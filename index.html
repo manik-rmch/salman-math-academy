@@ -216,7 +216,7 @@ table.rt tbody tr:hover{background:#f8fafc}
 /* ================= রশিদ (A6 — ১০৫×১৪৮ মিমি) ================= */
 .receipt-preview{background:#e2e8f0;padding:12px;border-radius:12px;display:flex;justify-content:center;overflow-x:auto}
 .receipt{
-  width:93mm;max-width:100%;background:#fff;color:#000;padding:4mm;font-size:12.5px;line-height:1.5;border:1.5px solid #000;
+  width:93mm;max-width:100%;background:#fff;color:#000;padding:3.5mm;font-size:12.5px;line-height:1.36;border:1.5px solid #000;
   font-family:"Noto Sans Bengali","Nirmala UI","Kalpurush","Siyam Rupali",sans-serif;
 }
 .receipt .r-head{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
@@ -224,10 +224,12 @@ table.rt tbody tr:hover{background:#f8fafc}
 .receipt .r-name{font-size:17px;font-weight:800;line-height:1.25}
 .receipt .r-title{text-align:center;font-weight:800;margin:4px 0;letter-spacing:.03em}
 .receipt .r-copy{text-align:center;font-weight:800;border:1px solid #000;margin:4px 0;padding:1px 0}
-.receipt .r-line{border:0;border-top:1px dashed #000;margin:5px 0}
+.receipt .r-line{border:0;border-top:1px dashed #000;margin:3px 0}
 .receipt .r-row{display:flex;justify-content:space-between;gap:6px}
 .receipt .r-row span{flex:0 0 auto;max-width:55%}
 .receipt .r-row b{text-align:right;overflow-wrap:anywhere;font-weight:600}
+.receipt .r-months{align-items:flex-start}
+.receipt .r-months b{max-width:68%}
 .receipt .r-big b{font-size:14px;font-weight:800}
 .receipt .r-sub{font-size:11px;margin:0 0 4px 6px;overflow-wrap:anywhere}
 .receipt .r-foot{text-align:center;margin-top:6px;overflow-wrap:anywhere}
@@ -1059,6 +1061,27 @@ async function submitPay() {
 /* ================= রশিদ (A6) ================= */
 function rrow(label, value, cls) { return '<div class="r-row ' + (cls || '') + '"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>'; }
 
+
+// মাসের তালিকা থেকে পরিসর: পরপর মাসগুলো "ফেব্রুয়ারি - অক্টোবর ২০২৬"; ফাঁক থাকলে কমা দিয়ে আলাদা অংশ
+function monthsRange(list) {
+  var idx = list.slice().sort().map(function (m) { var p = m.split('-'); return Number(p[0]) * 12 + Number(p[1]) - 1; });
+  var groups = [], g = null;
+  idx.forEach(function (v) {
+    if (g && v === g[1] + 1) g[1] = v; else { g = [v, v]; groups.push(g); }
+  });
+  function nm(v) { return MONTHS_BN[v % 12]; }
+  function yr(v) { return bn(Math.floor(v / 12)); }
+  if (groups.length > 3) {
+    var f = idx[0], l = idx[idx.length - 1];
+    return nm(f) + ' ' + yr(f) + ' - ' + nm(l) + ' ' + yr(l) + ' (মাঝে কিছু মাস বাদ)';
+  }
+  return groups.map(function (x) {
+    if (x[0] === x[1]) return nm(x[0]) + ' ' + yr(x[0]);
+    if (Math.floor(x[0] / 12) === Math.floor(x[1] / 12)) return nm(x[0]) + ' - ' + nm(x[1]) + ' ' + yr(x[1]);
+    return nm(x[0]) + ' ' + yr(x[0]) + ' - ' + nm(x[1]) + ' ' + yr(x[1]);
+  }).join(', ');
+}
+
 function receiptHtml(r, copy) {
   var c = r.center || {};
   var h = '<div class="receipt"><div class="r-head">' + logoSvg(46, true) + '<div class="r-txt"><div class="r-name">' + esc(c.name) + '</div>' +
@@ -1069,12 +1092,21 @@ function receiptHtml(r, copy) {
     rrow('রশিদ নং', r.receiptNo) + rrow('জমার তারিখ', dt(r.dateTime)) + '<hr class="r-line">' +
     rrow('শিক্ষার্থী', r.studentName) + rrow('আইডি', r.studentId) + rrow('শ্রেণি/ব্যাচ', r.cls) + '<hr class="r-line">';
   if (r.items && r.items.length > 1) {
+    // একাধিক মাস: A6-এর এক পাতায় ধরার জন্য সারসংক্ষেপ (মাসের পরিসর + মোট)
+    var tDue = 0, tPrev = 0, tRem = 0, tOver = 0, tExtra = 0, tDisc = 0, sameFee = true;
     r.items.forEach(function (it) {
-      var rem = it.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-it.remaining) + ')' : taka(it.remaining);
-      h += rrow(monthLabel(it.month), taka(it.current)) +
-        '<div class="r-sub">পাওনা ' + esc(taka(it.total)) + ' · আগের জমা ' + esc(taka(it.prevPaid)) + ' · বাকি ' + esc(rem) + '</div>';
+      tDue += it.total; tPrev += it.prevPaid; tExtra += it.extra || 0; tDisc += it.discount || 0;
+      if (it.remaining > 0) tRem += it.remaining; else tOver += -it.remaining;
+      if (it.monthlyFee !== r.items[0].monthlyFee) sameFee = false;
     });
-    h += '<hr class="r-line">' + rrow('মোট জমা', taka(r.currentTotal), 'r-big');
+    h += '<div class="r-row r-months"><span>বেতনের মাস</span><b>' + esc(monthsRange(r.items.map(function (it) { return it.month; }))) + '</b></div>' +
+      rrow('মাসের সংখ্যা', bn(r.items.length) + 'টি') + '<hr class="r-line">';
+    if (sameFee) h += rrow('মাসিক বেতন', taka(r.items[0].monthlyFee));
+    if (tExtra > 0) h += rrow('অতিরিক্ত চার্জ', taka(tExtra));
+    if (tDisc > 0) h += rrow('ছাড়', '- ' + taka(tDisc));
+    h += rrow('মোট পাওনা', taka(tDue)) + rrow('আগের জমা', taka(tPrev)) +
+      rrow('বর্তমান জমা', taka(r.currentTotal), 'r-big') +
+      rrow('অবশিষ্ট বকেয়া', tOver > 0 && tRem === 0 ? taka(0) + ' (অতিরিক্ত ' + taka(tOver) + ')' : taka(tRem), 'r-big');
   } else {
     h += rrow('বেতনের মাস', monthLabel(r.month)) + '<hr class="r-line">' + rrow('মাসিক বেতন', taka(r.monthlyFee));
     if (r.extra > 0) h += rrow('অতিরিক্ত চার্জ', taka(r.extra));
