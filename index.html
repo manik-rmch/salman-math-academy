@@ -906,8 +906,8 @@ async function viewStudent(id) {
     return [esc(monthLabel(f.month)), taka(f.total), taka(f.paid), taka(f.due), badge(f.status), acts];
   }), [1, 2, 3]);
   h += '<h3 style="margin-top:16px">বেতন জমার ইতিহাস</h3>';
-  h += tbl(['রশিদ', 'তারিখ', 'মাস', 'পরিমাণ', 'মাধ্যম', 'অবস্থা', ''], r.payments.map(function (p) {
-    return [esc(p.receipt), dt(p.time), esc(monthLabel(p.month)), taka(p.amount), esc(p.method), badge(p.status),
+  h += tbl(['রশিদ', 'তারিখ', 'মাস', 'পরিমাণ', 'মাধ্যম', 'অবস্থা', ''], groupReceipts(r.payments).map(function (p) {
+    return [esc(p.receipt), dt(p.time), esc(p.monthText), taka(p.amount), esc(p.method), badge(p.status),
       '<button class="btn small" data-act="receipt" data-no="' + esc(p.receipt) + '">রশিদ</button>'];
   }), [3]);
   openModal(h, true);
@@ -1082,6 +1082,18 @@ function monthsRange(list) {
   }).join(', ');
 }
 
+// একই রশিদের একাধিক মাসের সারি এক সারিতে মিলিয়ে দেয় (ইতিহাস ও রিপোর্টের জন্য)
+function groupReceipts(rows) {
+  var map = {}, order = [];
+  rows.forEach(function (x) {
+    var g = map[x.receipt];
+    if (!g) { g = map[x.receipt] = { receipt: x.receipt, time: x.time, months: [], amount: 0, method: x.method, byName: x.byName, status: 'বাতিল', studentId: x.studentId, name: x.name, cls: x.cls }; order.push(x.receipt); }
+    g.months.push(x.month); g.amount += Number(x.amount) || 0;
+    if (x.status === 'বৈধ') g.status = 'বৈধ';
+  });
+  return order.map(function (k) { map[k].amount = Math.round(map[k].amount * 100) / 100; map[k].monthText = monthsRange(map[k].months); return map[k]; });
+}
+
 function receiptHtml(r, copy) {
   var c = r.center || {};
   var h = '<div class="receipt"><div class="r-head">' + logoSvg(46, true) + '<div class="r-txt"><div class="r-name">' + esc(c.name) + '</div>' +
@@ -1093,27 +1105,35 @@ function receiptHtml(r, copy) {
     rrow('শিক্ষার্থী', r.studentName) + rrow('আইডি', r.studentId) + rrow('শ্রেণি/ব্যাচ', r.cls) + '<hr class="r-line">';
   if (r.items && r.items.length > 1) {
     // একাধিক মাস: A6-এর এক পাতায় ধরার জন্য সারসংক্ষেপ (মাসের পরিসর + মোট)
-    var tDue = 0, tPrev = 0, tRem = 0, tOver = 0, tExtra = 0, tDisc = 0, sameFee = true;
+    var tDue = 0, tPrev = 0, tRem = 0, tOver = 0, tExtra = 0, tDisc = 0, sameFee = true, hasOut = r.outstanding !== undefined;
     r.items.forEach(function (it) {
-      tDue += it.total; tPrev += it.prevPaid; tExtra += it.extra || 0; tDisc += it.discount || 0;
+      if (!it.future) { tDue += it.total; tPrev += it.prevPaid; tExtra += it.extra || 0; tDisc += it.discount || 0; }
       if (it.remaining > 0) tRem += it.remaining; else tOver += -it.remaining;
       if (it.monthlyFee !== r.items[0].monthlyFee) sameFee = false;
     });
+    if (!hasOut) { tDue = 0; tPrev = 0; r.items.forEach(function (it) { tDue += it.total; tPrev += it.prevPaid; }); }
     h += '<div class="r-row r-months"><span>বেতনের মাস</span><b>' + esc(monthsRange(r.items.map(function (it) { return it.month; }))) + '</b></div>' +
       rrow('মাসের সংখ্যা', bn(r.items.length) + 'টি') + '<hr class="r-line">';
     if (sameFee) h += rrow('মাসিক বেতন', taka(r.items[0].monthlyFee));
     if (tExtra > 0) h += rrow('অতিরিক্ত চার্জ', taka(tExtra));
     if (tDisc > 0) h += rrow('ছাড়', '- ' + taka(tDisc));
     h += rrow('মোট পাওনা', taka(tDue)) + rrow('আগের জমা', taka(tPrev)) +
-      rrow('বর্তমান জমা', taka(r.currentTotal), 'r-big') +
-      rrow('অবশিষ্ট বকেয়া', tOver > 0 && tRem === 0 ? taka(0) + ' (অতিরিক্ত ' + taka(tOver) + ')' : taka(tRem), 'r-big');
+      rrow('বর্তমান জমা', taka(r.currentTotal), 'r-big');
+    if (hasOut) {
+      h += rrow('মোট অবশিষ্ট বকেয়া', taka(r.outstanding), 'r-big');
+      if (r.advance > 0) h += rrow('অগ্রিম জমা (আগামী মাসের)', taka(r.advance));
+    } else {
+      h += rrow('অবশিষ্ট বকেয়া', tOver > 0 && tRem === 0 ? taka(0) + ' (অতিরিক্ত ' + taka(tOver) + ')' : taka(tRem), 'r-big');
+    }
   } else {
     h += rrow('বেতনের মাস', monthLabel(r.month)) + '<hr class="r-line">' + rrow('মাসিক বেতন', taka(r.monthlyFee));
     if (r.extra > 0) h += rrow('অতিরিক্ত চার্জ', taka(r.extra));
     if (r.discount > 0) h += rrow('ছাড়', '- ' + taka(r.discount));
     h += rrow('মোট পাওনা', taka(r.total)) + rrow('আগের জমা', taka(r.prevPaid)) +
       rrow('বর্তমান জমা', taka(r.current), 'r-big') +
-      rrow('অবশিষ্ট বকেয়া', r.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-r.remaining) + ')' : taka(r.remaining), 'r-big');
+      (r.outstanding !== undefined ? rrow('মোট অবশিষ্ট বকেয়া', taka(r.outstanding), 'r-big') +
+        (r.advance > 0 ? rrow('অগ্রিম জমা (আগামী মাসের)', taka(r.advance)) : '')
+        : rrow('অবশিষ্ট বকেয়া', r.remaining < 0 ? taka(0) + ' (অতিরিক্ত ' + taka(-r.remaining) + ')' : taka(r.remaining), 'r-big'));
   }
   h += '<hr class="r-line">' + rrow('মাধ্যম', r.method) + rrow('গ্রহণকারী', r.receivedBy) +
     '<hr class="r-line"><div class="r-foot">' + esc(c.footer || 'ধন্যবাদ।') + '</div>' +
@@ -1270,12 +1290,14 @@ async function loadDaily() {
     footer: ['মোট আদায় (বৈধ): ' + taka(r.total)].concat(methodLine ? [methodLine] : []),
     file: 'collection-report.csv'
   };
-  var rows = r.rows.map(function (x) {
-    return [esc(x.receipt), dt(x.time), esc(x.studentId), esc(x.name), esc(x.cls), esc(monthLabel(x.month)), taka(x.amount), esc(x.method), esc(x.byName), badge(x.status),
+  var groups = groupReceipts(r.rows);
+  S.rep.fmt = groups.map(function (x) { return [x.receipt, dt(x.time), x.studentId, x.name, x.cls, x.monthText, taka(x.amount), x.method, x.byName, x.status]; });
+  var rows = groups.map(function (x) {
+    return [esc(x.receipt), dt(x.time), esc(x.studentId), esc(x.name), esc(x.cls), esc(x.monthText), taka(x.amount), esc(x.method), esc(x.byName), badge(x.status),
       '<button class="btn small" data-act="receipt" data-no="' + esc(x.receipt) + '">রশিদ</button>' +
       (isMgr() && x.status === 'বৈধ' ? ' <button class="btn small danger" data-act="void-pay" data-no="' + esc(x.receipt) + '">বাতিল</button>' : '')];
   });
-  $('repResult').innerHTML = '<p><b>মোট আদায়: ' + taka(r.total) + '</b> (' + bn(r.rows.length) + 'টি পেমেন্ট সারি)</p>' +
+  $('repResult').innerHTML = '<p><b>মোট আদায়: ' + taka(r.total) + '</b> (' + bn(groups.length) + 'টি রশিদ)</p>' +
     (methodLine ? '<p class="muted">' + esc(methodLine) + '</p>' : '') + reportActions() + tbl(head.concat(['']), rows, [6]);
 }
 
